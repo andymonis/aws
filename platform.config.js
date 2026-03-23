@@ -8,6 +8,11 @@ export default {
   // Path is relative to the project root.
   functionsDir: path.resolve(__dirname, './apps/example-app/functions'),
 
+  // Optional static site hosting via the gateway.
+  // Files in this folder will be served at staticPrefix.
+  staticDir: path.resolve(__dirname, './apps/example-app/static'),
+  staticPrefix: '/app/',
+
   routes: [
     {
       path: '/hello',

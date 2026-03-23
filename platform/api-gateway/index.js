@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import fastifyStatic from '@fastify/static';
 import { v4 as uuidv4 } from 'uuid';
 import { createLogger } from '../shared/logger.js';
 import { verifyToken } from '../shared/verifyToken.js';
@@ -54,7 +55,7 @@ function hasRequiredRole(tokenPayload, requiredRoles) {
  * @param {object} config - contents of platform.config.js
  */
 export function buildGateway(config) {
-  const { routes = [], functionsDir } = config;
+  const { routes = [], functionsDir, staticDir, staticPrefix = '/app/' } = config;
 
   if (!functionsDir) {
     throw new Error('platform.config.js must define functionsDir');
@@ -67,6 +68,16 @@ export function buildGateway(config) {
     origin: process.env.CORS_ORIGIN ?? '*',
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
+
+  // Optional static asset hosting
+  if (staticDir) {
+    app.register(fastifyStatic, {
+      root: staticDir,
+      prefix: staticPrefix,
+      index: 'index.html',
+      decorateReply: false,
+    });
+  }
 
   // Assign request ID to every request
   app.addHook('onRequest', (request, _reply, done) => {

@@ -44,7 +44,8 @@
 │   └── function-runtime/    ← Lambda analogue
 └── apps/
     └── example-app/
-        └── functions/       ← handler files loaded by function-runtime
+        ├── functions/       ← handler files loaded by function-runtime
+        └── static/          ← plain static assets served by api-gateway
 ```
 
 > **Phase 2** will add `platform/data-service/`.
@@ -145,7 +146,7 @@ All responses from identity-service follow:
 ### 5.2 api-gateway
 
 **AWS analogue:** API Gateway  
-**Responsibility:** Single HTTP entry point. Reads route definitions from `platform.config.js`, enforces authentication and permissions, delegates execution to function-runtime.
+**Responsibility:** Single HTTP entry point. Reads route definitions from `platform.config.js`, enforces authentication and permissions, delegates execution to function-runtime, and optionally serves static assets.
 
 #### Request pipeline (ordered)
 
@@ -153,6 +154,7 @@ All responses from identity-service follow:
 Incoming HTTP Request
   → CORS headers
   → Request ID assigned (uuid, added to headers + log context)
+  → Static asset check (if static hosting is configured)
   → Auth middleware (verify JWT from Authorization: Bearer <token>)
   → Route lookup (match method + path)
   → Permission check (roles/permissions from JWT vs route requirements)
@@ -189,6 +191,12 @@ Incoming HTTP Request
 | 404 | `GW_ROUTE_NOT_FOUND` |
 | 429 | `GW_RATE_LIMITED` |
 | 500 | `GW_INTERNAL_ERROR` |
+
+#### Static hosting (Phase 1)
+
+- If `staticDir` is configured in `platform.config.js`, api-gateway serves static files from that folder.
+- Default mount path is `staticPrefix: "/app/"`.
+- Supported assets are plain HTML/CSS/JS files (no build step or bundler required).
 
 ---
 
@@ -279,6 +287,8 @@ Lives at the project root. Loaded once at boot by the gateway and runtime.
 ```js
 export default {
   functionsDir: "./apps/example-app/functions",
+  staticDir: "./apps/example-app/static",
+  staticPrefix: "/app/",
 
   routes: [
     {
@@ -313,6 +323,7 @@ export default {
 |---|---|---|
 | `fastify` | api-gateway, identity-service | HTTP server |
 | `@fastify/cors` | api-gateway | CORS headers |
+| `@fastify/static` | api-gateway | Static file hosting |
 | `better-sqlite3` | identity-service | SQLite storage |
 | `jsonwebtoken` | identity-service, shared | JWT sign/verify |
 | `bcrypt` | identity-service | Password hashing |
@@ -347,7 +358,7 @@ These are non-negotiable and must not be weakened:
 - Audit logs
 - Indexes, TTL, DynamoDB Streams equivalent
 - Multiple processes / inter-service HTTP (services are co-located in Phase 1)
-- Any front-end
+- Front-end frameworks/build pipelines (plain static assets only in Phase 1)
 
 ---
 
@@ -355,7 +366,7 @@ These are non-negotiable and must not be weakened:
 
 | Phase | Services | Storage | Key additions |
 |---|---|---|---|
-| **1** | identity, api-gateway, function-runtime | SQLite (identity only) | Core auth + routing + handlers |
+| **1** | identity, api-gateway, function-runtime | SQLite (identity only) | Core auth + routing + handlers + static asset hosting |
 | **2** | + data-service | SQLite → Postgres | `context.db`, document API |
 | **3** | all | Postgres | SDK, CLI, scaffolding |
 | **4** | all | Postgres | Rate limits, timeouts, audit logs, monitoring |
@@ -380,3 +391,4 @@ These are non-negotiable and must not be weakened:
 | Date | Change |
 |---|---|
 | 2026-03-17 | Document created. Phase 1 architecture defined. |
+| 2026-03-23 | Phase 1 updated to include optional static asset hosting via api-gateway (`staticDir` + `staticPrefix`). |
