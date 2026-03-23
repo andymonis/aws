@@ -47,7 +47,8 @@ It defines non-negotiable project-specific rules to reduce drift and hallucinati
 2. Preserve auth pipeline order: auth -> role/permission checks -> invocation.
 3. Keep rate limiter as a Phase 1 stub unless user asks to implement limits.
 4. Preserve requestId propagation into logs/context.
-5. If static hosting is enabled, keep it configured via `staticDir` + `staticPrefix` in `platform.config.js`.
+5. Bind each route to an app via `route.app` and resolve folders from `apps.<appName>` config.
+6. If static hosting is enabled, keep it configured per app via `apps.<appName>.staticDir` + `apps.<appName>.staticPrefix`.
 
 ## 7) Function runtime behavior
 

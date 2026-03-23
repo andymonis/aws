@@ -28,6 +28,7 @@
 5. **Declarative configuration.** APIs, functions, and tables are declared in `platform.config.js`. The platform reads config at boot — not at request time.
 6. **Local first.** The entire platform must run with `node server.js` on a developer laptop with no containers, no cloud, no Docker.
 7. **Minimal dependencies.** Only pull in a package when the cost of writing it yourself outweighs the maintenance burden of the dependency.
+8. **App isolation by configuration.** Multiple apps under `apps/*` must be supported in Phase 1, with routes explicitly bound to an app so handlers and static assets remain isolated.
 
 ---
 
@@ -36,16 +37,19 @@
 ```
 /
 ├── architecture.md          ← this file
-├── platform.config.js       ← root app config (routes, functions, tables)
+├── platform.config.js       ← root app config (apps, routes, tables)
 ├── server.js                ← single-process entry point (Phase 1)
 ├── platform/
 │   ├── identity-service/    ← Cognito analogue
 │   ├── api-gateway/         ← API Gateway analogue
 │   └── function-runtime/    ← Lambda analogue
 └── apps/
-    └── example-app/
-        ├── functions/       ← handler files loaded by function-runtime
-        └── static/          ← plain static assets served by api-gateway
+  ├── example-app/
+  │   ├── functions/       ← handler files loaded by function-runtime
+  │   └── static/          ← plain static assets served by api-gateway
+  └── another-app/
+    ├── functions/
+    └── static/
 ```
 
 > **Phase 2** will add `platform/data-service/`.
@@ -168,6 +172,7 @@ Incoming HTTP Request
 
 ```js
 {
+  app: "example-app",      // key in config.apps
   path: "/orders",          // string, must start with /
   method: "POST",           // uppercase HTTP verb
   function: "createOrder",  // filename stem in apps/<app>/functions/
@@ -175,6 +180,8 @@ Incoming HTTP Request
   roles: ["user", "admin"]  // optional — if present, user must have at least one
 }
 ```
+
+`app` is required when multiple apps are configured.
 
 #### Auth mechanics
 
@@ -194,8 +201,8 @@ Incoming HTTP Request
 
 #### Static hosting (Phase 1)
 
-- If `staticDir` is configured in `platform.config.js`, api-gateway serves static files from that folder.
-- Default mount path is `staticPrefix: "/app/"`.
+- Static hosting is configured per app in `platform.config.js` under `apps.<appName>.staticDir`.
+- Mount path is configured per app via `apps.<appName>.staticPrefix`.
 - Supported assets are plain HTML/CSS/JS files (no build step or bundler required).
 
 ---
@@ -238,6 +245,7 @@ export async function handler(event, context) {
 
 ```js
 {
+  app: "example-app",      // route-bound app key
   user: {              // null if unauthenticated route
     id, accountId, roles, permissions
   },
@@ -251,9 +259,9 @@ export async function handler(event, context) {
 
 #### Handler resolution
 
-- Functions directory: configured as `functionsDir` in `platform.config.js`.
+- Functions directory: resolved from `apps[route.app].functionsDir` in `platform.config.js`.
 - Resolved path: `<functionsDir>/<functionName>.js`
-- Loaded via `import()` on first call, cached in a `Map` for subsequent calls.
+- Loaded via `import()` on first call, cached in a `Map` keyed by absolute file path for subsequent calls.
 - If the module does not export `handler`, the runtime throws `RUNTIME_INVALID_HANDLER`.
 
 #### Error codes
@@ -286,12 +294,22 @@ Lives at the project root. Loaded once at boot by the gateway and runtime.
 
 ```js
 export default {
-  functionsDir: "./apps/example-app/functions",
-  staticDir: "./apps/example-app/static",
-  staticPrefix: "/app/",
+  apps: {
+    "example-app": {
+      functionsDir: "./apps/example-app/functions",
+      staticDir: "./apps/example-app/static",
+      staticPrefix: "/app/"
+    },
+    "another-app": {
+      functionsDir: "./apps/another-app/functions",
+      staticDir: "./apps/another-app/static",
+      staticPrefix: "/another-app/"
+    }
+  },
 
   routes: [
     {
+      app: "example-app",
       path: "/hello",
       method: "GET",
       function: "hello",
@@ -392,3 +410,4 @@ These are non-negotiable and must not be weakened:
 |---|---|
 | 2026-03-17 | Document created. Phase 1 architecture defined. |
 | 2026-03-23 | Phase 1 updated to include optional static asset hosting via api-gateway (`staticDir` + `staticPrefix`). |
+| 2026-03-23 | Phase 1 updated for app-aware configuration (`apps` map + route `app` binding) to support multiple isolated apps. |

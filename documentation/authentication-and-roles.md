@@ -66,6 +66,7 @@ In `platform.config.js`, use `roles` to restrict access:
 
 ```js
 {
+  app: 'example-app',
   path: '/admin/report',
   method: 'GET',
   function: 'admin-report',

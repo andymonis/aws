@@ -10,15 +10,19 @@ In `platform.config.js`:
 
 ```js
 export default {
-  functionsDir: '...',
-  staticDir: '.../apps/example-app/static',
-  staticPrefix: '/app/',
+  apps: {
+    'example-app': {
+      functionsDir: '.../apps/example-app/functions',
+      staticDir: '.../apps/example-app/static',
+      staticPrefix: '/app/'
+    }
+  },
   routes: [...]
 };
 ```
 
-- `staticDir`: folder containing static files
-- `staticPrefix`: URL prefix where assets are served
+- `apps.<app>.staticDir`: folder containing static files for that app
+- `apps.<app>.staticPrefix`: URL prefix where that app is served
 
 ## Example
 
@@ -34,4 +38,4 @@ The included page calls gateway route `GET /hello` using `fetch('/hello')`.
 
 - Keep static assets public-safe (never include secrets).
 - For now, only plain HTML/CSS/JS is expected.
-- API routes continue to be declared in `platform.config.js` under `routes`.
+- API routes continue to be declared in `platform.config.js` under `routes`, with `app` set per route.

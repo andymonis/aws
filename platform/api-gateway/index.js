@@ -46,6 +46,23 @@ function hasRequiredRole(tokenPayload, requiredRoles) {
   return requiredRoles.some((r) => roles.includes(r));
 }
 
+function buildAppsMap(config) {
+  const declaredApps = config.apps && typeof config.apps === 'object'
+    ? { ...config.apps }
+    : {};
+
+  // Backward compatibility for older single-app config shape.
+  if (Object.keys(declaredApps).length === 0 && config.functionsDir) {
+    declaredApps.default = {
+      functionsDir: config.functionsDir,
+      staticDir: config.staticDir,
+      staticPrefix: config.staticPrefix ?? '/app/',
+    };
+  }
+
+  return declaredApps;
+}
+
 // ---------------------------------------------------------------------------
 // Gateway server factory
 // ---------------------------------------------------------------------------
@@ -55,10 +72,12 @@ function hasRequiredRole(tokenPayload, requiredRoles) {
  * @param {object} config - contents of platform.config.js
  */
 export function buildGateway(config) {
-  const { routes = [], functionsDir, staticDir, staticPrefix = '/app/' } = config;
+  const { routes = [] } = config;
+  const apps = buildAppsMap(config);
+  const appNames = Object.keys(apps);
 
-  if (!functionsDir) {
-    throw new Error('platform.config.js must define functionsDir');
+  if (appNames.length === 0) {
+    throw new Error('platform.config.js must define apps.<name>.functionsDir (or legacy functionsDir)');
   }
 
   const app = Fastify({ logger: false });
@@ -69,14 +88,25 @@ export function buildGateway(config) {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
 
-  // Optional static asset hosting
-  if (staticDir) {
-    app.register(fastifyStatic, {
-      root: staticDir,
-      prefix: staticPrefix,
-      index: 'index.html',
-      decorateReply: false,
-    });
+  // Optional static asset hosting (per app)
+  const usedPrefixes = new Set();
+  for (const appName of appNames) {
+    const appConfig = apps[appName];
+    const prefix = appConfig.staticPrefix ?? `/${appName}/`;
+
+    if (appConfig.staticDir) {
+      if (usedPrefixes.has(prefix)) {
+        throw new Error(`Duplicate staticPrefix '${prefix}' in platform.config.js`);
+      }
+      usedPrefixes.add(prefix);
+
+      app.register(fastifyStatic, {
+        root: appConfig.staticDir,
+        prefix,
+        index: 'index.html',
+        decorateReply: false,
+      });
+    }
   }
 
   // Assign request ID to every request
@@ -87,18 +117,33 @@ export function buildGateway(config) {
 
   // Register each declared route
   for (const route of routes) {
-    const { path: routePath, method, function: functionName, auth = false, roles } = route;
+    const { app: routeApp, path: routePath, method, function: functionName, auth = false, roles } = route;
+
+    const inferredApp = appNames.length === 1 ? appNames[0] : null;
+    const appName = routeApp ?? inferredApp;
+    const appConfig = appName ? apps[appName] : null;
 
     if (!routePath || !method || !functionName) {
-      log.warn({ route }, 'Skipping invalid route definition (missing path, method or function)');
-      continue;
+      throw new Error(`Invalid route config: missing path/method/function for route ${JSON.stringify(route)}`);
+    }
+
+    if (!appName) {
+      throw new Error(`Route '${method} ${routePath}' is missing app binding`);
+    }
+
+    if (!appConfig) {
+      throw new Error(`Route '${method} ${routePath}' references unknown app '${appName}'`);
+    }
+
+    if (!appConfig.functionsDir) {
+      throw new Error(`App '${appName}' is missing functionsDir in platform.config.js`);
     }
 
     const httpMethod = method.toLowerCase();
 
     app[httpMethod](routePath, async (request, reply) => {
       const requestId = request.requestId;
-      const childLog = log.child({ requestId, path: routePath, method });
+      const childLog = log.child({ requestId, app: appName, path: routePath, method });
 
       childLog.info('request received');
 
@@ -140,6 +185,7 @@ export function buildGateway(config) {
       };
 
       const context = {
+        app: appName,
         user: tokenPayload
           ? {
               id: tokenPayload.sub,
@@ -156,7 +202,12 @@ export function buildGateway(config) {
       // Invoke function
       let result;
       try {
-        result = await invoke({ functionsDir, functionName, event, context });
+        result = await invoke({
+          functionsDir: appConfig.functionsDir,
+          functionName,
+          event,
+          context,
+        });
       } catch (err) {
         return fail(reply, err, requestId);
       }

@@ -4,7 +4,7 @@ import { PlatformError } from '../shared/errors.js';
 
 const log = createLogger('function-runtime');
 
-// Handler module cache: functionName → module
+// Handler module cache: <absolute file path> → handler function
 const _cache = new Map();
 
 /**
@@ -14,11 +14,11 @@ const _cache = new Map();
  * @returns {Promise<Function>} the `handler` export
  */
 async function loadHandler(functionsDir, functionName) {
-  if (_cache.has(functionName)) {
-    return _cache.get(functionName);
-  }
-
   const filePath = path.resolve(functionsDir, `${functionName}.js`);
+
+  if (_cache.has(filePath)) {
+    return _cache.get(filePath);
+  }
 
   let mod;
   try {
@@ -46,7 +46,7 @@ async function loadHandler(functionsDir, functionName) {
     );
   }
 
-  _cache.set(functionName, mod.handler);
+  _cache.set(filePath, mod.handler);
   return mod.handler;
 }
 

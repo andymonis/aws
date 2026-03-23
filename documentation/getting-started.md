@@ -47,9 +47,13 @@ Expected services:
 
 ## 6) Where to add your app functions
 
-Add handler files under:
+Add handler files under your app folder, for example:
 
 - `apps/example-app/functions`
+
+You can add multiple apps under `apps/*` (for example `apps/billing-app/functions`).
+
+Then register each app in `platform.config.js` under `apps` and bind routes with `app: '<app-name>'`.
 
 Each file must export:
 
