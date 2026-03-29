@@ -6,6 +6,8 @@ import {
   createAccount,
   createUser,
   getUserByEmail,
+  getUsersByEmail,
+  getUsersByAccountId,
   getUserById,
   createRole,
   getRolesByAccount,
@@ -49,6 +51,21 @@ async function issueRefreshToken(userId) {
   return token;
 }
 
+async function resolveUserByPassword(users, password, ambiguousMessage) {
+  const matches = [];
+  for (const user of users) {
+    if (await bcrypt.compare(password, user.password_hash)) {
+      matches.push(user);
+    }
+  }
+
+  if (matches.length > 1) {
+    throw new PlatformError('AUTH_AMBIGUOUS_LOGIN', ambiguousMessage, 400);
+  }
+
+  return matches[0] ?? null;
+}
+
 // ---------------------------------------------------------------------------
 // Auth handlers
 // ---------------------------------------------------------------------------
@@ -88,17 +105,38 @@ export async function register(body) {
 export async function login(body) {
   const { accountId, email, password } = body;
 
-  if (!accountId || !email || !password) {
-    throw new PlatformError('AUTH_VALIDATION', 'accountId, email and password are required', 400);
+  if (!password || (!email && !accountId)) {
+    throw new PlatformError(
+      'AUTH_VALIDATION',
+      'Provide password plus either email or accountId',
+      400
+    );
   }
 
-  const user = getUserByEmail(accountId, email);
+  let user = null;
+
+  if (email && accountId) {
+    const candidate = getUserByEmail(accountId, email);
+    if (candidate && (await bcrypt.compare(password, candidate.password_hash))) {
+      user = candidate;
+    }
+  } else if (email) {
+    const candidates = getUsersByEmail(email);
+    user = await resolveUserByPassword(
+      candidates,
+      password,
+      'Multiple accounts matched this email/password. Provide accountId with email.'
+    );
+  } else {
+    const candidates = getUsersByAccountId(accountId);
+    user = await resolveUserByPassword(
+      candidates,
+      password,
+      'Multiple users matched this accountId/password. Provide email with password.'
+    );
+  }
+
   if (!user) {
-    throw new PlatformError('AUTH_INVALID_CREDENTIALS', 'Invalid credentials', 401);
-  }
-
-  const valid = await bcrypt.compare(password, user.password_hash);
-  if (!valid) {
     throw new PlatformError('AUTH_INVALID_CREDENTIALS', 'Invalid credentials', 401);
   }
 

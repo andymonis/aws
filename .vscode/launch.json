@@ -14,6 +14,7 @@
             "program": "${workspaceFolder}/server.js",
             "env": {
                 "NODE_ENV": "development",
+                "DEV_SEED": "true",
                 "PLATFORM_JWT_SECRET": "local.development.secret.key.please.change.this"
             }
         }

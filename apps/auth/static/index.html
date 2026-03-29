@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Platform Auth App</title>
+    <link rel="stylesheet" href="/auth/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Common Login App</h1>
+      <p>Reusable static login UI for identity endpoints.</p>
+
+      <section class="panel">
+        <h2>Service endpoint</h2>
+        <label for="identity-base">Identity base URL</label>
+        <input id="identity-base" type="text" />
+        <small>Default: http://localhost:3001</small>
+      </section>
+
+      <section class="panel">
+        <h2>Register</h2>
+        <div class="grid">
+          <label for="register-account">Account name</label>
+          <input id="register-account" type="text" value="Acme" />
+
+          <label for="register-email">Email</label>
+          <input id="register-email" type="email" value="admin@acme.com" />
+
+          <label for="register-password">Password</label>
+          <input id="register-password" type="password" value="Password1!" />
+        </div>
+        <button id="register-btn">Register</button>
+      </section>
+
+      <section class="panel">
+        <h2>Login</h2>
+        <div class="grid">
+          <label for="login-email">Email (recommended)</label>
+          <input id="login-email" type="email" value="admin@acme.com" />
+
+          <label for="login-account-id">Account ID (optional)</label>
+          <input id="login-account-id" type="text" placeholder="Use for accountId + password login" />
+
+          <label for="login-password">Password</label>
+          <input id="login-password" type="password" value="Password1!" />
+        </div>
+        <small>Login accepts: email + password, or accountId + password.</small>
+        <button id="login-btn">Login</button>
+      </section>
+
+      <section class="panel actions">
+        <h2>Token actions</h2>
+        <button id="refresh-btn">Refresh Access Token</button>
+        <button id="me-btn">Get /users/me</button>
+      </section>
+
+      <section class="panel">
+        <h2>Stored session</h2>
+        <pre id="session">(no session)</pre>
+      </section>
+
+      <section class="panel">
+        <h2>Last response</h2>
+        <pre id="output">(no requests yet)</pre>
+      </section>
+    </main>
+
+    <script type="module" src="/auth/app.js"></script>
+  </body>
+</html>

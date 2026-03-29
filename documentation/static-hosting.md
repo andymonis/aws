@@ -26,13 +26,17 @@ export default {
 
 ## Example
 
-Current example app serves:
+Current apps serve:
 
-- page: `/app/`
-- script: `/app/app.js`
-- stylesheet: `/app/styles.css`
+- Example app page: `/app/`
+- Shared auth page: `/auth/`
 
-The included page calls gateway route `GET /hello` using `fetch('/hello')`.
+The shared auth app (`/auth/`) is a basic login demo that calls identity endpoints:
+
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /auth/refresh`
+- `GET /users/me`
 
 ## Notes
 

@@ -6,6 +6,8 @@ This guide explains how app developers authenticate and protect endpoints.
 
 Identity endpoints run on `IDENTITY_PORT` (default `3001`).
 
+The shared login app at `/auth/` includes a basic UI that calls the endpoints below.
+
 ### Register account + first admin user
 
 `POST /auth/register`
@@ -34,8 +36,16 @@ Body:
 
 ```json
 {
-  "accountId": "<account-id>",
   "email": "admin@acme.com",
+  "password": "Password1!"
+}
+```
+
+Also supported:
+
+```json
+{
+  "accountId": "<account-id>",
   "password": "Password1!"
 }
 ```
@@ -103,7 +113,7 @@ Gateway protected route failures include `requestId` for troubleshooting.
 ## 6) Practical developer flow
 
 1. Register once to create account/admin user.
-2. Save returned `accountId` and tokens.
+2. Login with `email + password` (or `accountId + password`).
 3. Add app routes with `auth` and optional `roles`.
 4. Call gateway with bearer token.
 5. Use `requestId` from errors/logs for debugging.

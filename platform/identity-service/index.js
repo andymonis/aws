@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import cors from '@fastify/cors';
 import { createLogger } from '../shared/logger.js';
 import { verifyToken } from '../shared/verifyToken.js';
 import { PlatformError } from '../shared/errors.js';
@@ -67,6 +68,11 @@ function requirePermission(permission) {
 
 export function buildIdentityServer() {
   const app = Fastify({ logger: false });
+
+  app.register(cors, {
+    origin: process.env.CORS_ORIGIN ?? '*',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  });
 
   // POST /auth/register
   app.post('/auth/register', async (req, reply) => {

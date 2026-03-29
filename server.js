@@ -11,6 +11,7 @@
 import { createLogger } from './platform/shared/logger.js';
 import { startIdentityService } from './platform/identity-service/index.js';
 import { startGateway } from './platform/api-gateway/index.js';
+import { runDevSeed } from './platform/identity-service/dev-seed.js';
 import config from './platform.config.js';
 
 const log = createLogger('server');
@@ -33,6 +34,16 @@ async function main() {
   log.info('Platform is running.');
   log.info(`  API Gateway    → http://localhost:${GATEWAY_PORT}`);
   log.info(`  Identity       → http://localhost:${IDENTITY_PORT}`);
+
+  if (process.env.DEV_SEED === 'true') {
+    const devUsers = await runDevSeed();
+    log.info('');
+    log.info('Dev seed users:');
+    for (const u of devUsers) {
+      log.info(`  [${u.roles.join(', ')}]  ${u.email}  /  ${u.password}  (accountId: ${u.accountId})`);
+    }
+  }
+
   log.info('');
   log.info('Quick start:');
   log.info(`  Register   POST http://localhost:${IDENTITY_PORT}/auth/register`);

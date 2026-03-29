@@ -332,6 +332,7 @@ export default {
 | `PORT` | No | HTTP port for api-gateway. Default: `3000` |
 | `IDENTITY_PORT` | No | HTTP port for identity-service. Default: `3001` |
 | `LOG_LEVEL` | No | Pino log level. Default: `info` |
+| `DEV_SEED` | No | Set to `true` to seed dev fixtures on startup. See §15. |
 
 ---
 
@@ -411,3 +412,47 @@ These are non-negotiable and must not be weakened:
 | 2026-03-17 | Document created. Phase 1 architecture defined. |
 | 2026-03-23 | Phase 1 updated to include optional static asset hosting via api-gateway (`staticDir` + `staticPrefix`). |
 | 2026-03-23 | Phase 1 updated for app-aware configuration (`apps` map + route `app` binding) to support multiple isolated apps. |
+| 2026-03-29 | Dev seeding mechanism added (`DEV_SEED=true`, `platform/identity-service/dev-seed.js`). |
+
+---
+
+## 15. Development Seeding
+
+**File:** `platform/identity-service/dev-seed.js`
+
+Provides a consistent set of accounts, roles, and users for local development. Seeding is idempotent — records that already exist are left untouched, so it is safe to run on every server restart.
+
+### Activation
+
+```bash
+DEV_SEED=true PLATFORM_JWT_SECRET=... node server.js
+```
+
+When `DEV_SEED=true`, `server.js` calls `runDevSeed()` after both services are listening and prints the dev credentials to the log.
+
+### Fixture definition
+
+Fixtures are declared in the exported `DEV_FIXTURES` array inside `dev-seed.js`. Each entry defines an account with its roles and users:
+
+```js
+{
+  accountName: 'dev-account',
+  roles: [
+    { name: 'admin', permissions: ['api:*', 'data:*', 'function:*'] },
+    { name: 'user',  permissions: ['function:invoke'] },
+  ],
+  users: [
+    { email: 'admin@dev.local', password: 'admin-dev-password', roles: ['admin'] },
+    { email: 'user@dev.local',  password: 'user-dev-password',  roles: ['user'] },
+  ],
+}
+```
+
+### Default dev credentials
+
+| Email | Password | Role |
+|---|---|---|
+| `admin@dev.local` | `admin-dev-password` | `admin` |
+| `user@dev.local` | `user-dev-password` | `user` |
+
+The `accountId` for `dev-account` is printed in the startup log on first seed.

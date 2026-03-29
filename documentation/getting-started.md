@@ -44,6 +44,7 @@ Expected services:
 - `GET /hello` via gateway: `http://localhost:3000/hello`
 - Register user: `POST http://localhost:3001/auth/register`
 - Static app example: `http://localhost:3000/app/`
+- Shared login app: `http://localhost:3000/auth/`
 
 ## 6) Where to add your app functions
 

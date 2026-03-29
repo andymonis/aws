@@ -97,12 +97,20 @@ export function getUserByEmail(accountId, email) {
   );
 }
 
+export function getUsersByEmail(email) {
+  return getDb().prepare('SELECT * FROM users WHERE email = ?').all(email);
+}
+
+export function getUsersByAccountId(accountId) {
+  return getDb().prepare('SELECT * FROM users WHERE account_id = ?').all(accountId);
+}
+
 export function getUserById(accountId, userId) {
-  return (
-    getDb()
-      .prepare('SELECT * FROM users WHERE id = ? AND account_id = ?')
-      .get(userId, accountId) ?? null
-  );
+  if (accountId == null) {
+    return getDb().prepare('SELECT * FROM users WHERE id = ?').get(userId) ?? null;
+  }
+
+  return getDb().prepare('SELECT * FROM users WHERE id = ? AND account_id = ?').get(userId, accountId) ?? null;
 }
 
 // ---------------------------------------------------------------------------
