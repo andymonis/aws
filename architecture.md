@@ -189,6 +189,7 @@ Incoming HTTP Request
 - JWT extracted from `Authorization: Bearer <token>` header.
 - Verification delegated to a shared `identity-service/verifyToken.js` utility (imported directly — this is the one permitted cross-service import because it is a pure function with no I/O).
 - If `auth: false` on the route, JWT is still parsed if present (for optional identity), but a missing token is not an error.
+- For app routes invoked through api-gateway, role/permission authorization is enforced centrally from route config (`auth` + `roles`). App handlers should focus on business rules and must not duplicate route-role checks unless explicitly required.
 
 #### Error codes returned by gateway
 

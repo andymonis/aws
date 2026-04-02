@@ -46,10 +46,11 @@ It defines non-negotiable project-specific rules to reduce drift and hallucinati
 
 1. Keep route definitions declarative in `platform.config.js`.
 2. Preserve auth pipeline order: auth -> role/permission checks -> invocation.
-3. Keep rate limiter as a Phase 1 stub unless user asks to implement limits.
-4. Preserve requestId propagation into logs/context.
-5. Bind each route to an app via `route.app` and resolve folders from `apps.<appName>` config.
-6. If static hosting is enabled, keep it configured per app via `apps.<appName>.staticDir` + `apps.<appName>.staticPrefix`.
+3. Treat api-gateway as the single authorization layer for app routes (`auth`/`roles` in `platform.config.js`). Do not duplicate role checks inside `apps/*/functions` handlers unless explicitly requested for defense-in-depth.
+4. Keep rate limiter as a Phase 1 stub unless user asks to implement limits.
+5. Preserve requestId propagation into logs/context.
+6. Bind each route to an app via `route.app` and resolve folders from `apps.<appName>` config.
+7. If static hosting is enabled, keep it configured per app via `apps.<appName>.staticDir` + `apps.<appName>.staticPrefix`.
 
 ## 7) Function runtime behavior
 

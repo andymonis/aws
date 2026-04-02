@@ -90,6 +90,9 @@ Behavior:
 - User must be authenticated
 - User must have at least one listed role
 - `api:*` permission bypasses role check
+- Route role checks happen in `platform/api-gateway/index.js` as the central authorization layer for app routes. Keep app handlers focused on business validation (for example enrollment or game-state checks), not duplicated role checks.
+
+Cranked gameplay routes use this model and require `admin` or `cranked-player` in `platform.config.js`.
 
 ## 4) Identity role management endpoints
 
