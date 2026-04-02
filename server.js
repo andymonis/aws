@@ -1,7 +1,7 @@
 /**
- * server.js — single-process entry point for Phase 1.
+ * server.js — single-process entry point for Phase 2.
  *
- * Boots identity-service and api-gateway in the same process.
+ * Boots identity-service, data-service, and api-gateway in the same process.
  * Each service listens on its own port.
  *
  * Usage:
@@ -11,6 +11,7 @@
 import { createLogger } from './platform/shared/logger.js';
 import { startIdentityService } from './platform/identity-service/index.js';
 import { startGateway } from './platform/api-gateway/index.js';
+import { startDataService } from './platform/data-service/index.js';
 import { runDevSeed } from './platform/identity-service/dev-seed.js';
 import config from './platform.config.js';
 
@@ -26,6 +27,8 @@ if (!process.env.PLATFORM_JWT_SECRET) {
 }
 
 async function main() {
+  startDataService(config);
+
   await Promise.all([
     startIdentityService(IDENTITY_PORT),
     startGateway(config, GATEWAY_PORT),
@@ -40,7 +43,7 @@ async function main() {
     log.info('');
     log.info('Dev seed users:');
     for (const u of devUsers) {
-      log.info(`  [${u.roles.join(', ')}]  ${u.email}  /  ${u.password}  (accountId: ${u.accountId})`);
+      log.info(`  [${u.roles.join(', ')}]  ${u.email}  (accountId: ${u.accountId})`);
     }
   }
 
@@ -49,6 +52,7 @@ async function main() {
   log.info(`  Register   POST http://localhost:${IDENTITY_PORT}/auth/register`);
   log.info(`  Login      POST http://localhost:${IDENTITY_PORT}/auth/login`);
   log.info(`  Hello      GET  http://localhost:${GATEWAY_PORT}/hello`);
+  log.info(`  Notes list GET  http://localhost:${GATEWAY_PORT}/notes`);
 }
 
 main().catch((err) => {

@@ -74,6 +74,10 @@ export async function invoke({ functionsDir, functionName, event, context }) {
       'handler completed'
     );
   } catch (err) {
+    if (err instanceof PlatformError) {
+      throw err;
+    }
+
     log.error({ functionName, requestId: context.requestId, err }, 'handler threw');
     throw new PlatformError(
       'RUNTIME_EXECUTION_ERROR',

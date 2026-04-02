@@ -11,12 +11,13 @@ It defines non-negotiable project-specific rules to reduce drift and hallucinati
 
 ## 2) Current scope and phase
 
-1. Current target is **Phase 1** unless explicitly requested otherwise.
-2. In Phase 1, focus only on:
+1. Current target is **Phase 2** unless explicitly requested otherwise.
+2. In Phase 2, focus on:
    - `identity-service`
    - `api-gateway`
    - `function-runtime`
-3. Do not introduce Phase 2+ features (data-service, CLI, SDK, timeouts, audit logs) unless asked.
+   - `data-service`
+3. Do not introduce Phase 3+ features (CLI, SDK, timeouts, audit logs) unless asked.
 
 ## 3) Runtime and language constraints
 

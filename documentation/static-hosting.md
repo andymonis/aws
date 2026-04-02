@@ -30,6 +30,8 @@ Current apps serve:
 
 - Example app page: `/app/`
 - Shared auth page: `/auth/`
+- Redirect login page: `/login/`
+- Cranked game app page: `/cranked/`
 
 The shared auth app (`/auth/`) is a basic login demo that calls identity endpoints:
 

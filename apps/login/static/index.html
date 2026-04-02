@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Platform Login</title>
+    <link rel="stylesheet" href="/login/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Login</h1>
+      <p>Login and redirect back to your app.</p>
+
+      <section class="panel">
+        <label for="identity-base">Identity base URL</label>
+        <input id="identity-base" type="text" />
+      </section>
+
+      <section class="panel">
+        <label for="redirect-url">Redirect URL</label>
+        <input id="redirect-url" type="text" />
+        <small>Set via <strong>?redirect=</strong> query parameter.</small>
+      </section>
+
+      <section class="panel form">
+        <label for="login-email">Email (recommended)</label>
+        <input id="login-email" type="email" value="admin@dev.local" />
+
+        <label for="login-account-id">Account ID (optional)</label>
+        <input id="login-account-id" type="text" placeholder="Use with password login" />
+
+        <label for="login-password">Password</label>
+        <input id="login-password" type="password" value="admin-dev-password" />
+
+        <button id="login-btn">Login</button>
+      </section>
+
+      <section class="panel">
+        <h2>Last response</h2>
+        <pre id="output">(no requests yet)</pre>
+      </section>
+    </main>
+
+    <script type="module" src="/login/app.js"></script>
+  </body>
+</html>

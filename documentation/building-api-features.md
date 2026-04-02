@@ -76,9 +76,22 @@ After changing config or handler files, restart server and test the endpoint.
 ### `context`
 
 - `context.user` (`null` for unauthenticated routes)
+- `context.db` account-scoped data client
 - `context.logger`
 - `context.config`
 - `context.requestId`
+
+`context.db` methods:
+
+- `context.db.list(tableName, { limit })`
+- `context.db.get(tableName, id)`
+- `context.db.put(tableName, item)`
+- `context.db.delete(tableName, id)`
+
+Data permissions are enforced automatically:
+
+- read: `data:read` or `data:*`
+- write: `data:write` or `data:*`
 
 ### Return value
 
@@ -94,3 +107,4 @@ Return an object:
 - Missing `handler` export causes runtime error.
 - Protected routes (`auth: true`) need `Authorization: Bearer <token>`.
 - Role-gated routes require matching `roles` claim in JWT.
+- `context.db` table names must exist in `platform.config.js > tables`.

@@ -115,5 +115,6 @@ Gateway protected route failures include `requestId` for troubleshooting.
 1. Register once to create account/admin user.
 2. Login with `email + password` (or `accountId + password`).
 3. Add app routes with `auth` and optional `roles`.
-4. Call gateway with bearer token.
-5. Use `requestId` from errors/logs for debugging.
+4. Use `context.db` in handlers for account-scoped persistence (`data:read` / `data:write`).
+5. Call gateway with bearer token.
+6. Use `requestId` from errors/logs for debugging.

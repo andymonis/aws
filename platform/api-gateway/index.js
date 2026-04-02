@@ -6,6 +6,7 @@ import { createLogger } from '../shared/logger.js';
 import { verifyToken } from '../shared/verifyToken.js';
 import { PlatformError, errors } from '../shared/errors.js';
 import { invoke } from '../function-runtime/index.js';
+import { createDataClient } from '../data-service/index.js';
 
 const log = createLogger('api-gateway');
 
@@ -194,6 +195,16 @@ export function buildGateway(config) {
               permissions: tokenPayload.permissions,
             }
           : null,
+        db: createDataClient({
+          user: tokenPayload
+            ? {
+                id: tokenPayload.sub,
+                accountId: tokenPayload.accountId,
+                roles: tokenPayload.roles,
+                permissions: tokenPayload.permissions,
+              }
+            : null,
+        }),
         logger: childLog,
         config,
         requestId,

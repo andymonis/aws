@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cranked — Phase 0</title>
+    <link rel="stylesheet" href="/cranked/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Cranked (Phase 0)</h1>
+      <p>Skeleton daily card game app. Use the login app to authenticate and return here automatically.</p>
+
+      <p><a href="/login/?redirect=/cranked/">Login and return to Cranked</a></p>
+
+      <section class="panel">
+        <label for="token">Access token</label>
+        <textarea id="token" rows="4" placeholder="Paste Bearer token here"></textarea>
+      </section>
+
+      <section class="panel row">
+        <button id="enroll-btn">POST /cranked/enroll</button>
+        <button id="me-btn">GET /cranked/me</button>
+      </section>
+
+      <section class="panel">
+        <label for="cards">Play cards (comma separated, max 5)</label>
+        <input id="cards" type="text" value="sprinter,climber,puncheur" />
+        <button id="play-btn">POST /cranked/play</button>
+      </section>
+
+      <section class="panel">
+        <button id="run-day-btn">POST /cranked/run-day (admin)</button>
+      </section>
+
+      <section class="panel">
+        <h2>Last response</h2>
+        <pre id="output">(no requests yet)</pre>
+      </section>
+    </main>
+
+    <script type="module" src="/cranked/app.js"></script>
+  </body>
+</html>

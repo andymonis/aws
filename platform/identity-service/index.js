@@ -11,6 +11,7 @@ import {
   listRoles,
   addRole,
   assignRole,
+  verifyTokenInfo,
 } from './handlers.js';
 
 const log = createLogger('identity-service');
@@ -98,6 +99,18 @@ export function buildIdentityServer() {
   app.post('/auth/refresh', async (req, reply) => {
     try {
       const result = await refresh(req.body ?? {});
+      return ok(reply, result);
+    } catch (err) {
+      return fail(reply, err);
+    }
+  });
+
+  // POST /auth/verify
+  app.post('/auth/verify', async (req, reply) => {
+    try {
+      const token = (req.body?.token) ?? (req.headers['authorization']?.slice(7) ?? null);
+      const tokenPayload = verifyToken(token);
+      const result = verifyTokenInfo(tokenPayload);
       return ok(reply, result);
     } catch (err) {
       return fail(reply, err);

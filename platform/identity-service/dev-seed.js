@@ -15,6 +15,7 @@ import {
   createAccount,
   createUser,
   createRole,
+  updateRolePermissions,
   assignRoleToUser,
   getUserByEmail,
   getRoleByName,
@@ -36,7 +37,7 @@ export const DEV_FIXTURES = [
       },
       {
         name: 'user',
-        permissions: ['function:invoke'],
+        permissions: ['function:invoke', 'data:read', 'data:write'],
       },
     ],
     users: [
@@ -81,6 +82,13 @@ export async function runDevSeed() {
     for (const roleDef of fixture.roles) {
       let role = getRoleByName(account.id, roleDef.name);
       if (role) {
+        const current = JSON.stringify([...role.permissions].sort());
+        const desired = JSON.stringify([...roleDef.permissions].sort());
+        if (current !== desired) {
+          updateRolePermissions(role.id, roleDef.permissions);
+          role = getRoleByName(account.id, roleDef.name);
+          log.info(`dev-seed: updated role permissions — ${roleDef.name}`);
+        }
         log.info(`dev-seed: role already exists — ${roleDef.name}`);
       } else {
         role = createRole(account.id, roleDef.name, roleDef.permissions);
@@ -97,10 +105,11 @@ export async function runDevSeed() {
       } else {
         const passwordHash = await bcrypt.hash(userDef.password, 12);
         user = createUser(account.id, userDef.email, passwordHash);
-        for (const roleName of userDef.roles) {
-          if (roleMap[roleName]) assignRoleToUser(user.id, roleMap[roleName].id);
-        }
         log.info(`dev-seed: created user — ${userDef.email}`);
+      }
+
+      for (const roleName of userDef.roles) {
+        if (roleMap[roleName]) assignRoleToUser(user.id, roleMap[roleName].id);
       }
 
       summary.push({

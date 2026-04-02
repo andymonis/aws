@@ -141,6 +141,12 @@ export function getRoleByName(accountId, name) {
   return row ? { ...row, permissions: JSON.parse(row.permissions) } : null;
 }
 
+export function updateRolePermissions(roleId, permissions = []) {
+  getDb()
+    .prepare('UPDATE roles SET permissions = ? WHERE id = ?')
+    .run(JSON.stringify(permissions), roleId);
+}
+
 export function assignRoleToUser(userId, roleId) {
   getDb()
     .prepare('INSERT OR IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)')

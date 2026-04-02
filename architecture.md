@@ -15,7 +15,7 @@
 | Language | JavaScript ES6 modules (`"type": "module"`) |
 | Runtime | Node.js — no transpilation, no TypeScript |
 | Target deployment | Standard Node.js hosting (single process or multiple HTTP services) |
-| Current phase | **Phase 1** — Core platform (identity, gateway, function runtime) |
+| Current phase | **Phase 2** — Core platform + persistent data service |
 
 ---
 
@@ -38,11 +38,12 @@
 /
 ├── architecture.md          ← this file
 ├── platform.config.js       ← root app config (apps, routes, tables)
-├── server.js                ← single-process entry point (Phase 1)
+├── server.js                ← single-process entry point (Phase 2)
 ├── platform/
 │   ├── identity-service/    ← Cognito analogue
 │   ├── api-gateway/         ← API Gateway analogue
-│   └── function-runtime/    ← Lambda analogue
+│   ├── function-runtime/    ← Lambda analogue
+│   └── data-service/        ← DynamoDB analogue (Phase 2)
 └── apps/
   ├── example-app/
   │   ├── functions/       ← handler files loaded by function-runtime
@@ -52,7 +53,6 @@
     └── static/
 ```
 
-> **Phase 2** will add `platform/data-service/`.
 > `apps/` holds user-land code. Platform code never imports from `apps/`.
 
 ---
@@ -132,6 +132,7 @@ JWT payload shape:
 | POST | `/auth/register` | No | Create account + first admin user |
 | POST | `/auth/login` | No | Returns `accessToken` + `refreshToken` |
 | POST | `/auth/refresh` | No (refresh token in body) | Returns new `accessToken` |
+| POST | `/auth/verify` | Yes (token in header or body) | Verify token validity; returns userId, expiresAt, permissions |
 | GET | `/users/me` | Yes | Returns calling user profile |
 | GET | `/roles` | Yes (admin) | List roles for the account |
 | POST | `/roles` | Yes (admin) | Create a role |
@@ -255,7 +256,7 @@ export async function handler(event, context) {
 }
 ```
 
-> **Phase 2** will add `context.db` — the data-service client.
+`context.db` is injected by the platform runtime and is account-scoped based on `context.user.accountId`.
 
 #### Handler resolution
 
@@ -271,6 +272,45 @@ export async function handler(event, context) {
 | `RUNTIME_HANDLER_NOT_FOUND` | File does not exist |
 | `RUNTIME_INVALID_HANDLER` | File exists but no `handler` export |
 | `RUNTIME_EXECUTION_ERROR` | Handler threw an unhandled exception |
+
+---
+
+### 5.4 data-service
+
+**AWS analogue:** DynamoDB  
+**Responsibility:** Persistent account-scoped document storage for app handlers via `context.db`.
+
+#### Storage (Phase 2)
+
+- SQLite via `better-sqlite3`
+- File path from `DATA_DB_PATH` (default `./platform/data-service/data.db`)
+- Tables are declared in `platform.config.js` under `tables`
+
+Example:
+
+```js
+tables: [
+  { name: 'notes' }
+]
+```
+
+#### Handler API (`context.db`)
+
+```js
+context.db.list(tableName, { limit })
+context.db.get(tableName, id)
+context.db.put(tableName, item)
+context.db.delete(tableName, id)
+```
+
+All operations are account-scoped using `context.user.accountId`.
+
+#### Data permissions
+
+- Read methods require `data:read` or `data:*`
+- Write methods require `data:write` or `data:*`
+- Missing auth returns `401`
+- Missing permission returns `403`
 
 ---
 
@@ -331,6 +371,7 @@ export default {
 | `IDENTITY_DB_PATH` | No | Path to SQLite file. Default: `./platform/identity-service/identity.db` |
 | `PORT` | No | HTTP port for api-gateway. Default: `3000` |
 | `IDENTITY_PORT` | No | HTTP port for identity-service. Default: `3001` |
+| `DATA_DB_PATH` | No | Path to data-service SQLite file. Default: `./platform/data-service/data.db` |
 | `LOG_LEVEL` | No | Pino log level. Default: `info` |
 | `DEV_SEED` | No | Set to `true` to seed dev fixtures on startup. See §15. |
 
@@ -343,7 +384,7 @@ export default {
 | `fastify` | api-gateway, identity-service | HTTP server |
 | `@fastify/cors` | api-gateway | CORS headers |
 | `@fastify/static` | api-gateway | Static file hosting |
-| `better-sqlite3` | identity-service | SQLite storage |
+| `better-sqlite3` | identity-service, data-service | SQLite storage |
 | `jsonwebtoken` | identity-service, shared | JWT sign/verify |
 | `bcrypt` | identity-service | Password hashing |
 | `pino` | all | Structured logging |
@@ -370,7 +411,6 @@ These are non-negotiable and must not be weakened:
 ## 11. What Is Explicitly Out of Scope (Phase 1)
 
 - OAuth / social login
-- data-service / `context.db`
 - Platform CLI
 - Developer SDK (`@platform/sdk`)
 - Function timeouts
@@ -386,7 +426,7 @@ These are non-negotiable and must not be weakened:
 | Phase | Services | Storage | Key additions |
 |---|---|---|---|
 | **1** | identity, api-gateway, function-runtime | SQLite (identity only) | Core auth + routing + handlers + static asset hosting |
-| **2** | + data-service | SQLite → Postgres | `context.db`, document API |
+| **2 (current)** | + data-service | SQLite (identity + data) | `context.db`, account-scoped document API |
 | **3** | all | Postgres | SDK, CLI, scaffolding |
 | **4** | all | Postgres | Rate limits, timeouts, audit logs, monitoring |
 
@@ -413,6 +453,7 @@ These are non-negotiable and must not be weakened:
 | 2026-03-23 | Phase 1 updated to include optional static asset hosting via api-gateway (`staticDir` + `staticPrefix`). |
 | 2026-03-23 | Phase 1 updated for app-aware configuration (`apps` map + route `app` binding) to support multiple isolated apps. |
 | 2026-03-29 | Dev seeding mechanism added (`DEV_SEED=true`, `platform/identity-service/dev-seed.js`). |
+| 2026-03-31 | Phase 2 started: `platform/data-service` added with SQLite persistence and `context.db` access in handlers. |
 
 ---
 
@@ -439,7 +480,7 @@ Fixtures are declared in the exported `DEV_FIXTURES` array inside `dev-seed.js`.
   accountName: 'dev-account',
   roles: [
     { name: 'admin', permissions: ['api:*', 'data:*', 'function:*'] },
-    { name: 'user',  permissions: ['function:invoke'] },
+    { name: 'user',  permissions: ['function:invoke', 'data:read', 'data:write'] },
   ],
   users: [
     { email: 'admin@dev.local', password: 'admin-dev-password', roles: ['admin'] },

@@ -228,3 +228,18 @@ export function assignRole(tokenPayload, userId, body) {
   assignRoleToUser(userId, role.id);
   return { userId, roleName };
 }
+
+export function verifyTokenInfo(tokenPayload) {
+  // Decode expiry from the JWT payload (exp is in seconds since epoch)
+  const expiresAt = new Date(tokenPayload.exp * 1000);
+  const now = new Date();
+
+  return {
+    userId: tokenPayload.sub,
+    accountId: tokenPayload.accountId,
+    roles: tokenPayload.roles ?? [],
+    permissions: tokenPayload.permissions ?? [],
+    expiresAt: expiresAt.toISOString(),
+    isExpired: now > expiresAt,
+  };
+}

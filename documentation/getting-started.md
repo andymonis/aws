@@ -27,6 +27,7 @@ Optional:
 
 - `PORT` (default `3000`) for api-gateway
 - `IDENTITY_PORT` (default `3001`) for identity-service
+- `DATA_DB_PATH` (default `./platform/data-service/data.db`) for data-service
 - `CORS_ORIGIN` (default `*`)
 - `LOG_LEVEL` (default `info`)
 
@@ -38,13 +39,18 @@ Expected services:
 
 - api-gateway on `http://localhost:3000`
 - identity-service on `http://localhost:3001`
+- data-service initialized with tables from `platform.config.js`
 
 ## 5) Verify with quick checks
 
 - `GET /hello` via gateway: `http://localhost:3000/hello`
+- `GET /notes` via gateway (requires auth + `data:read`): `http://localhost:3000/notes`
+- `POST /cranked/enroll` via gateway (requires auth): `http://localhost:3000/cranked/enroll`
 - Register user: `POST http://localhost:3001/auth/register`
 - Static app example: `http://localhost:3000/app/`
 - Shared login app: `http://localhost:3000/auth/`
+- Redirect login app: `http://localhost:3000/login/?redirect=/cranked/`
+- Cranked app (Phase 0): `http://localhost:3000/cranked/`
 
 ## 6) Where to add your app functions
 
