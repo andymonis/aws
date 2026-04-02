@@ -39,17 +39,21 @@ export const DEV_FIXTURES = [
         name: 'user',
         permissions: ['function:invoke', 'data:read', 'data:write'],
       },
+      {
+        name: 'cranked-player',
+        permissions: ['function:invoke'],
+      },
     ],
     users: [
       {
         email: 'admin@dev.local',
         password: 'admin-dev-password',
-        roles: ['admin'],
+        roles: ['admin', 'cranked-player'],
       },
       {
         email: 'user@dev.local',
         password: 'user-dev-password',
-        roles: ['user'],
+        roles: ['user', 'cranked-player'],
       },
     ],
   },

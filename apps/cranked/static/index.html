@@ -24,8 +24,9 @@
       </section>
 
       <section class="panel">
-        <label for="cards">Play cards (comma separated, max 5)</label>
-        <input id="cards" type="text" value="sprinter,climber,puncheur" />
+        <label for="cards">Play cards by card id (comma separated GUIDs, max 5)</label>
+        <input id="cards" type="text" value="8cb6d931-0c4d-4144-8104-2f36fc8ad39f,0c4eecf1-ecf5-4e3d-9f54-a94643f16b96,d53e1dd3-ee3a-4f95-8c89-c55789acdc71" />
+        <p>Tip: run GET /cranked/me to copy card ids from your deck.</p>
         <button id="play-btn">POST /cranked/play</button>
       </section>
 

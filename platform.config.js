@@ -78,7 +78,7 @@ export default {
       method: 'POST',
       function: 'cranked-enroll',
       auth: true,
-      roles: ['admin', 'user'],
+      roles: ['admin', 'cranked-player'],
     },
     {
       app: 'cranked',
@@ -86,7 +86,7 @@ export default {
       method: 'GET',
       function: 'cranked-me',
       auth: true,
-      roles: ['admin', 'user'],
+      roles: ['admin', 'cranked-player'],
     },
     {
       app: 'cranked',
@@ -94,7 +94,7 @@ export default {
       method: 'POST',
       function: 'cranked-play',
       auth: true,
-      roles: ['admin', 'user'],
+      roles: ['admin', 'cranked-player'],
     },
     {
       app: 'cranked',

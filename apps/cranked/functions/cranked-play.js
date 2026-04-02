@@ -41,11 +41,26 @@ export async function handler(event, context) {
   }
 
   const playId = `${dayKey}:${userId}`;
+  const existingPlay = context.db.get('cranked_plays', playId);
+  if (existingPlay) {
+    return {
+      statusCode: 409,
+      body: {
+        ok: false,
+        error: {
+          code: 'CRANKED_ALREADY_PLAYED',
+          message: `Play for day '${dayKey}' already submitted.`,
+        },
+        requestId: context.requestId,
+      },
+    };
+  }
+
   const play = context.db.put('cranked_plays', {
     id: playId,
     dayKey,
     userId,
-    cards,
+    cards: validation.cards,
     submittedAt: new Date().toISOString(),
   });
 

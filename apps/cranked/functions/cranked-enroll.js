@@ -1,4 +1,4 @@
-import { STARTER_DECK } from './game-state.js';
+import { STARTER_DECK, migrateDeckToGuidIds } from './game-state.js';
 
 /**
  * cranked-enroll.js — create a player profile with default starter deck.
@@ -10,13 +10,26 @@ export async function handler(_event, context) {
   const existing = context.db.get('cranked_players', userId);
 
   if (existing) {
+    const migratedDeck = migrateDeckToGuidIds(existing.deck ?? []);
+    const hasDeckChanges = JSON.stringify(migratedDeck) !== JSON.stringify(existing.deck ?? []);
+
+    const player = hasDeckChanges
+      ? context.db.put('cranked_players', {
+          ...existing,
+          id: userId,
+          userId,
+          deck: migratedDeck,
+        })
+      : existing;
+
     return {
       statusCode: 200,
       body: {
         ok: true,
         data: {
-          player: existing,
+          player,
           alreadyEnrolled: true,
+          migratedDeckIds: hasDeckChanges,
         },
         requestId: context.requestId,
       },
@@ -27,7 +40,7 @@ export async function handler(_event, context) {
     id: userId,
     userId,
     teamName: 'Starter Team',
-    deck: STARTER_DECK,
+    deck: STARTER_DECK.map((card) => ({ ...card })),
     enrolledAt: new Date().toISOString(),
     lastPlayDay: null,
     lastRunDay: null,
@@ -40,6 +53,7 @@ export async function handler(_event, context) {
       data: {
         player,
         alreadyEnrolled: false,
+        migratedDeckIds: false,
       },
       requestId: context.requestId,
     },
