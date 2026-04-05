@@ -19,6 +19,10 @@ body {
   margin: 1rem 0;
 }
 
+.panel h2 {
+  margin-top: 0;
+}
+
 .row {
   display: flex;
   gap: 0.75rem;
@@ -44,6 +48,72 @@ textarea {
   border-radius: 8px;
   padding: 0.6rem;
   box-sizing: border-box;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.status-item {
+  background: #0b1220;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.status-item .label {
+  color: #93c5fd;
+  font-size: 0.82rem;
+}
+
+.deck-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.7rem;
+}
+
+.deck-card {
+  width: 100%;
+  text-align: left;
+  background: #0b1220;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: #e2e8f0;
+  padding: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.deck-card.selected {
+  border-color: #38bdf8;
+  background: #082f49;
+}
+
+.deck-card small {
+  color: #93c5fd;
+  font-size: 0.7rem;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+  border-bottom: 1px solid #334155;
+  padding: 0.55rem;
+  text-align: left;
+}
+
+.leaderboard-table tr.me {
+  background: #082f49;
 }
 
 pre {

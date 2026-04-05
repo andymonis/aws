@@ -26,6 +26,8 @@ export async function handler(_event, context) {
   }
 
   const todayPlay = context.db.get('cranked_plays', `${dayKey}:${userId}`);
+  const todayRun = context.db.get('cranked_runs', dayKey);
+  const todayOutcome = todayRun?.outcomes?.find((outcome) => outcome.userId === userId) ?? null;
 
   return {
     statusCode: 200,
@@ -35,6 +37,8 @@ export async function handler(_event, context) {
         dayKey,
         player,
         todayPlay,
+        todayRun,
+        todayOutcome,
       },
       requestId: context.requestId,
     },

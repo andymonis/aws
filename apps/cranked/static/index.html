@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cranked — Phase 0</title>
+    <title>Cranked — Phase 4 Basic Loop</title>
     <link rel="stylesheet" href="/cranked/styles.css" />
   </head>
   <body>
     <main class="container">
-      <h1>Cranked (Phase 0)</h1>
-      <p>Skeleton daily card game app. Use the login app to authenticate and return here automatically.</p>
+      <h1>Cranked (Phase 4 Basic Loop)</h1>
+      <p>Enroll once, submit up to 5 cards each day, then view the processed daily ranking.</p>
 
       <p><a href="/login/?redirect=/cranked/">Login and return to Cranked</a></p>
 
@@ -19,19 +19,41 @@
       </section>
 
       <section class="panel row">
-        <button id="enroll-btn">POST /cranked/enroll</button>
-        <button id="me-btn">GET /cranked/me</button>
+        <button id="enroll-btn">Enroll</button>
+        <button id="me-btn">Refresh My State</button>
+        <button id="play-btn">Submit Today&apos;s Play</button>
       </section>
 
       <section class="panel">
-        <label for="cards">Play cards by card id (comma separated GUIDs, max 5)</label>
-        <input id="cards" type="text" value="8cb6d931-0c4d-4144-8104-2f36fc8ad39f,0c4eecf1-ecf5-4e3d-9f54-a94643f16b96,d53e1dd3-ee3a-4f95-8c89-c55789acdc71" />
-        <p>Tip: run GET /cranked/me to copy card ids from your deck.</p>
-        <button id="play-btn">POST /cranked/play</button>
+        <h2>My Status</h2>
+        <div class="status-grid">
+          <div class="status-item"><span class="label">Day</span><span id="status-day">-</span></div>
+          <div class="status-item"><span class="label">Enrollment</span><span id="status-enrolled">Not enrolled</span></div>
+          <div class="status-item"><span class="label">Today&apos;s Play</span><span id="status-play">Not submitted</span></div>
+          <div class="status-item"><span class="label">Today&apos;s Rank</span><span id="status-rank">-</span></div>
+        </div>
       </section>
 
       <section class="panel">
-        <button id="run-day-btn">POST /cranked/run-day (admin)</button>
+        <h2>Pick Your Cards (max 5)</h2>
+        <p>Select cards from your deck. The selected card ids are submitted as your daily play.</p>
+        <div id="deck-list" class="deck-list">
+          <p>Refresh your state to load your deck.</p>
+        </div>
+        <label for="cards">Selected card ids (advanced/manual)</label>
+        <input id="cards" type="text" value="" placeholder="auto-filled from selection" />
+      </section>
+
+      <section class="panel">
+        <h2>Admin: Run Daily Engine</h2>
+        <label for="run-day-key">Run day key (optional, YYYY-MM-DD)</label>
+        <input id="run-day-key" type="text" placeholder="leave blank for today" />
+        <button id="run-day-btn">Run Day (admin)</button>
+      </section>
+
+      <section class="panel">
+        <h2>Today&apos;s Leaderboard</h2>
+        <div id="leaderboard">No run processed yet.</div>
       </section>
 
       <section class="panel">

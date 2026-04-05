@@ -50,7 +50,7 @@ Expected services:
 - Static app example: `http://localhost:3000/app/`
 - Shared login app: `http://localhost:3000/auth/`
 - Redirect login app: `http://localhost:3000/login/?redirect=/cranked/`
-- Cranked app (Phase 0): `http://localhost:3000/cranked/`
+- Cranked app (Phase 4 basic loop): `http://localhost:3000/cranked/`
 
 ## 6) Where to add your app functions
 

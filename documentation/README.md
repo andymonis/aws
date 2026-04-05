@@ -4,7 +4,7 @@ This folder is for app developers building APIs on top of this platform.
 
 Phase 2 supports multiple isolated apps under `apps/*`, route-to-app binding in `platform.config.js`, and persistent account-scoped data via `context.db`.
 
-Current sample apps include `example-app`, `auth`, `login`, and `cranked` (Phase 0 game skeleton).
+Current sample apps include `example-app`, `auth`, `login`, and `cranked` (Phase 4 basic player-facing loop).
 
 ## Docs in this folder
 
