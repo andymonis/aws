@@ -50,7 +50,17 @@ Expected services:
 - Static app example: `http://localhost:3000/app/`
 - Shared login app: `http://localhost:3000/auth/`
 - Redirect login app: `http://localhost:3000/login/?redirect=/cranked/`
-- Cranked app (Phase 4 basic loop): `http://localhost:3000/cranked/`
+- Cranked app (mobile Home/Deck/Event flow): `http://localhost:3000/cranked/`
+- Cranked test harness (single file): `http://localhost:3000/cranked/test.html`
+
+Cranked daily flow:
+
+- open `/cranked/`
+- login and return
+- enroll once
+- choose one event and up to 5 cards
+- submit `/cranked/play` with `eventId` + `cards`
+- view latest status/results on Home after admin runs `/cranked/run-day`
 
 ## 6) Where to add your app functions
 

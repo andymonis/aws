@@ -9,6 +9,51 @@ export const STARTER_DECK = [
   { id: '8dc88307-f44f-454b-b8f0-6d44a68f5bbf', name: 'Captain', power: 3 },
 ];
 
+const EVENT_TEMPLATES = {
+  training: [
+    {
+      slug: 'hill-repeats',
+      name: 'Hill Repeats',
+      description: 'A focused climbing block that rewards committed effort.',
+      scoreRule: 'Gain +2 if your hand has total base power of 9 or more.',
+    },
+    {
+      slug: 'team-drills',
+      name: 'Team Drills',
+      description: 'Structured training that rewards balanced squads.',
+      scoreRule: 'Gain +1 if you play at least 4 different cards.',
+    },
+  ],
+  race: [
+    {
+      slug: 'circuit-race',
+      name: 'Circuit Race',
+      description: 'Fast repeated laps with lots of drafting pressure.',
+      scoreRule: 'Gain +2 if you submit a full 5-card hand.',
+    },
+    {
+      slug: 'summit-finish',
+      name: 'Summit Finish',
+      description: 'A shorter stage that rewards punchy leaders.',
+      scoreRule: 'Gain +2 if your hand includes a card with power 3.',
+    },
+  ],
+  rest: [
+    {
+      slug: 'recovery-day',
+      name: 'Recovery Day',
+      description: 'Dial it back and keep the squad fresh.',
+      scoreRule: 'Gain +1 if you play 3 or fewer cards.',
+    },
+    {
+      slug: 'camp-reset',
+      name: 'Camp Reset',
+      description: 'An easier day that still rewards steady work.',
+      scoreRule: 'Gain +1 if your hand has total base power of 6 or more.',
+    },
+  ],
+};
+
 const LEGACY_CARD_ID_ALIASES = {
   sprinter: '8cb6d931-0c4d-4144-8104-2f36fc8ad39f',
   climber: '0c4eecf1-ecf5-4e3d-9f54-a94643f16b96',
@@ -24,6 +69,25 @@ function normalizeCardId(cardId) {
   return LEGACY_CARD_ID_ALIASES[cardId] ?? cardId;
 }
 
+function computeStableIndex(seed, length) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 33 + seed.charCodeAt(i)) % 2147483647;
+  }
+  return hash % length;
+}
+
+function createEvent(dayKey, eventType, template) {
+  return {
+    id: `${dayKey}:${eventType}:${template.slug}`,
+    dayKey,
+    type: eventType,
+    name: template.name,
+    description: template.description,
+    scoreRule: template.scoreRule,
+  };
+}
+
 export function migrateDeckToGuidIds(deck) {
   if (!Array.isArray(deck)) return [];
 
@@ -35,6 +99,30 @@ export function migrateDeckToGuidIds(deck) {
 
 export function getDayKey(date = new Date()) {
   return date.toISOString().slice(0, 10);
+}
+
+export function getAvailableEvents(dayKey = getDayKey()) {
+  return Object.entries(EVENT_TEMPLATES).map(([eventType, templates]) => {
+    const template = templates[computeStableIndex(`${dayKey}:${eventType}`, templates.length)];
+    return createEvent(dayKey, eventType, template);
+  });
+}
+
+export function getEventById(dayKey, eventId) {
+  return getAvailableEvents(dayKey).find((event) => event.id === eventId) ?? null;
+}
+
+export function isValidEventSelection(dayKey, eventId) {
+  if (!eventId) {
+    return { ok: false, message: 'eventId is required' };
+  }
+
+  const event = getEventById(dayKey, eventId);
+  if (!event) {
+    return { ok: false, message: `event '${eventId}' is not available for ${dayKey}` };
+  }
+
+  return { ok: true, event };
 }
 
 export function isValidPlay(deck, cards) {

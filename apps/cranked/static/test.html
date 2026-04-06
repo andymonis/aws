@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cranked Test Harness</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, sans-serif;
+        background: #08111f;
+        color: #e5eefb;
+      }
+
+      main {
+        max-width: 840px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+
+      section {
+        background: #101b2d;
+        border: 1px solid #263447;
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 14px;
+      }
+
+      input,
+      textarea,
+      button,
+      select {
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 8px;
+        border-radius: 10px;
+        border: 1px solid #334155;
+        padding: 10px;
+        background: #08111f;
+        color: #e5eefb;
+      }
+
+      button {
+        cursor: pointer;
+        background: #2563eb;
+        border: none;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+      }
+
+      .list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: #17304f;
+        margin-right: 6px;
+        margin-bottom: 6px;
+      }
+
+      pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Cranked Test Harness</h1>
+      <p>Single-file page for quick API testing alongside the player-facing app.</p>
+      <p><a href="/login/?redirect=/cranked/test.html">Login and return here</a></p>
+
+      <section>
+        <label for="token">Access token</label>
+        <textarea id="token" rows="3" placeholder="Paste token here"></textarea>
+        <div class="row">
+          <button id="refresh-btn">Refresh /cranked/me</button>
+          <button id="enroll-btn">POST /cranked/enroll</button>
+          <button id="run-btn">POST /cranked/run-day</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Events</h2>
+        <div id="events" class="list">Refresh to load events.</div>
+      </section>
+
+      <section>
+        <h2>Deck</h2>
+        <div id="deck" class="list">Refresh to load deck.</div>
+      </section>
+
+      <section>
+        <h2>Submit Play</h2>
+        <label for="event-id">Selected event id</label>
+        <input id="event-id" type="text" placeholder="select an event above" />
+        <label for="cards">Card ids (comma separated)</label>
+        <input id="cards" type="text" placeholder="select cards above" />
+        <button id="play-btn">POST /cranked/play</button>
+      </section>
+
+      <section>
+        <h2>Output</h2>
+        <pre id="output">(no requests yet)</pre>
+      </section>
+    </main>
+
+    <script>
+      const tokenEl = document.querySelector('#token');
+      const eventIdEl = document.querySelector('#event-id');
+      const cardsEl = document.querySelector('#cards');
+      const outputEl = document.querySelector('#output');
+      const eventsEl = document.querySelector('#events');
+      const deckEl = document.querySelector('#deck');
+
+      const state = {
+        selectedCards: new Set(),
+      };
+
+      function consumeRedirectToken() {
+        const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
+        if (!hash) return;
+        const fragment = new URLSearchParams(hash);
+        const accessToken = fragment.get('accessToken');
+        if (accessToken) {
+          tokenEl.value = accessToken;
+          localStorage.setItem('cranked.test.accessToken', accessToken);
+        }
+        window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+      }
+
+      function restoreSavedToken() {
+        const saved = localStorage.getItem('cranked.test.accessToken');
+        if (saved && !tokenEl.value.trim()) tokenEl.value = saved;
+      }
+
+      function authHeaders() {
+        const token = tokenEl.value.trim();
+        const headers = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+        return headers;
+      }
+
+      function show(payload) {
+        outputEl.textContent = JSON.stringify(payload, null, 2);
+      }
+
+      async function callApi(path, method, body) {
+        const headers = authHeaders();
+        if (body !== undefined) headers['Content-Type'] = 'application/json';
+        const response = await fetch(path, {
+          method,
+          headers,
+          body: body ? JSON.stringify(body) : undefined,
+        });
+        const data = await response.json().catch(() => ({ ok: false }));
+        show({ status: response.status, data });
+        return { status: response.status, data };
+      }
+
+      function syncCardsInput() {
+        cardsEl.value = [...state.selectedCards].join(',');
+      }
+
+      function renderEvents(events) {
+        if (!events || !events.length) {
+          eventsEl.innerHTML = 'No events available.';
+          return;
+        }
+        eventsEl.innerHTML = events.map((event) => `
+          <button type="button" data-event-id="${event.id}">
+            <strong>${event.name}</strong><br />
+            <span class="pill">${event.type}</span>
+            <div>${event.description}</div>
+            <small>${event.scoreRule}</small>
+          </button>
+        `).join('');
+        eventsEl.querySelectorAll('[data-event-id]').forEach((button) => {
+          button.addEventListener('click', () => {
+            eventIdEl.value = button.dataset.eventId;
+          });
+        });
+      }
+
+      function renderDeck(deck) {
+        if (!deck || !deck.length) {
+          deckEl.innerHTML = 'No deck loaded.';
+          return;
+        }
+        deckEl.innerHTML = deck.map((card) => `
+          <button type="button" data-card-id="${card.id}">
+            <strong>${card.name}</strong> · Power ${card.power}<br />
+            <small>${card.id}</small>
+          </button>
+        `).join('');
+        deckEl.querySelectorAll('[data-card-id]').forEach((button) => {
+          button.addEventListener('click', () => {
+            const id = button.dataset.cardId;
+            if (state.selectedCards.has(id)) {
+              state.selectedCards.delete(id);
+            } else if (state.selectedCards.size < 5) {
+              state.selectedCards.add(id);
+            }
+            syncCardsInput();
+          });
+        });
+      }
+
+      async function refreshMe() {
+        const result = await callApi('/cranked/me', 'GET');
+        if (result.status === 200 && result.data.ok) {
+          renderEvents(result.data.data.availableEvents);
+          renderDeck(result.data.data.player.deck);
+          state.selectedCards = new Set(result.data.data.todayPlay?.cards ?? []);
+          syncCardsInput();
+          if (result.data.data.todayPlay?.eventId) {
+            eventIdEl.value = result.data.data.todayPlay.eventId;
+          }
+        }
+      }
+
+      document.querySelector('#refresh-btn').addEventListener('click', refreshMe);
+      document.querySelector('#enroll-btn').addEventListener('click', async () => {
+        const result = await callApi('/cranked/enroll', 'POST');
+        if (result.status === 200 || result.status === 201) refreshMe();
+      });
+      document.querySelector('#run-btn').addEventListener('click', async () => {
+        await callApi('/cranked/run-day', 'POST');
+        refreshMe();
+      });
+      document.querySelector('#play-btn').addEventListener('click', async () => {
+        await callApi('/cranked/play', 'POST', {
+          eventId: eventIdEl.value.trim(),
+          cards: cardsEl.value.split(',').map((value) => value.trim()).filter(Boolean),
+        });
+        refreshMe();
+      });
+      tokenEl.addEventListener('input', () => {
+        const token = tokenEl.value.trim();
+        if (token) localStorage.setItem('cranked.test.accessToken', token);
+        else localStorage.removeItem('cranked.test.accessToken');
+      });
+
+      consumeRedirectToken();
+      restoreSavedToken();
+      if (tokenEl.value.trim()) refreshMe();
+    </script>
+  </body>
+</html>

@@ -17,6 +17,59 @@ function buildDeckIndex(deck) {
   return index;
 }
 
+function computeEventBonus(play, cards, cardBreakdown, basePower) {
+  const eventType = play.event?.type ?? null;
+  const hasPowerThreeCard = cardBreakdown.some((card) => card.power >= 3);
+  const distinctCardCount = new Set(cards).size;
+
+  if (eventType === 'training') {
+    if (play.event?.id.includes('hill-repeats')) {
+      return {
+        score: basePower >= 9 ? 2 : 0,
+        reason: 'Hill Repeats rewards hands with total base power 9 or more.',
+      };
+    }
+
+    return {
+      score: distinctCardCount >= 4 ? 1 : 0,
+      reason: 'Team Drills rewards varied 4-card hands or better.',
+    };
+  }
+
+  if (eventType === 'race') {
+    if (play.event?.id.includes('circuit-race')) {
+      return {
+        score: cards.length === 5 ? 2 : 0,
+        reason: 'Circuit Race rewards a full 5-card hand.',
+      };
+    }
+
+    return {
+      score: hasPowerThreeCard ? 2 : 0,
+      reason: 'Summit Finish rewards hands with at least one power-3 card.',
+    };
+  }
+
+  if (eventType === 'rest') {
+    if (play.event?.id.includes('recovery-day')) {
+      return {
+        score: cards.length <= 3 ? 1 : 0,
+        reason: 'Recovery Day rewards compact hands of 3 cards or fewer.',
+      };
+    }
+
+    return {
+      score: basePower >= 6 ? 1 : 0,
+      reason: 'Camp Reset rewards steady hands with base power 6 or more.',
+    };
+  }
+
+  return {
+    score: 0,
+    reason: 'No event bonus applied.',
+  };
+}
+
 function computeOutcome(play, player, dayKey) {
   const deckIndex = buildDeckIndex(player?.deck ?? []);
   const cards = Array.isArray(play.cards) ? play.cards : [];
@@ -32,18 +85,22 @@ function computeOutcome(play, player, dayKey) {
   const basePower = cardBreakdown.reduce((sum, card) => sum + card.power, 0);
   const fullHandBonus = cards.length === 5 ? 2 : 0;
   const varietyBonus = new Set(cards).size >= 4 ? 1 : 0;
-  const score = basePower + fullHandBonus + varietyBonus;
+  const eventBonus = computeEventBonus(play, cards, cardBreakdown, basePower);
+  const score = basePower + fullHandBonus + varietyBonus + eventBonus.score;
 
   return {
     userId: play.userId,
     teamName: player?.teamName ?? 'Unknown Team',
+    event: play.event ?? null,
     cards,
     cardBreakdown,
     basePower,
     bonuses: {
       fullHandBonus,
       varietyBonus,
+      eventBonus: eventBonus.score,
     },
+    eventBonusReason: eventBonus.reason,
     score,
     tieBreakerSeed: computeTieBreakerSeed(dayKey, play.userId),
   };
@@ -105,12 +162,13 @@ export async function handler(event, context) {
     dayKey,
     processedAt: new Date().toISOString(),
     totalPlays: dayPlays.length,
-    scoringVersion: 'phase3-skeleton-v1',
-    leaderboard: rankedOutcomes.slice(0, 10).map(({ userId, teamName, rank, score }) => ({
+    scoringVersion: 'phase4-player-loop-v1',
+    leaderboard: rankedOutcomes.slice(0, 10).map(({ userId, teamName, rank, score, event }) => ({
       userId,
       teamName,
       rank,
       score,
+      event,
     })),
     outcomes: rankedOutcomes,
   });

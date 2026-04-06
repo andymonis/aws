@@ -1,4 +1,4 @@
-import { getDayKey } from './game-state.js';
+import { getAvailableEvents, getDayKey } from './game-state.js';
 
 /**
  * cranked-me.js — return player state for the authenticated user.
@@ -28,6 +28,32 @@ export async function handler(_event, context) {
   const todayPlay = context.db.get('cranked_plays', `${dayKey}:${userId}`);
   const todayRun = context.db.get('cranked_runs', dayKey);
   const todayOutcome = todayRun?.outcomes?.find((outcome) => outcome.userId === userId) ?? null;
+  const availableEvents = getAvailableEvents(dayKey);
+
+  const allRuns = context.db.list('cranked_runs', { limit: 50 });
+  const recentResults = allRuns
+    .filter((run) => Array.isArray(run.outcomes))
+    .map((run) => {
+      const outcome = run.outcomes.find((entry) => entry.userId === userId);
+      if (!outcome) return null;
+
+      return {
+        dayKey: run.dayKey,
+        processedAt: run.processedAt,
+        rank: outcome.rank,
+        score: outcome.score,
+        event: outcome.event ?? null,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.dayKey.localeCompare(a.dayKey))
+    .slice(0, 5);
+
+  const home = {
+    canSubmitPlay: !todayPlay,
+    selectedEvent: todayPlay?.event ?? null,
+    lastResult: recentResults[0] ?? null,
+  };
 
   return {
     statusCode: 200,
@@ -36,9 +62,12 @@ export async function handler(_event, context) {
       data: {
         dayKey,
         player,
+        home,
+        availableEvents,
         todayPlay,
         todayRun,
         todayOutcome,
+        recentResults,
       },
       requestId: context.requestId,
     },

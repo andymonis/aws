@@ -1,4 +1,4 @@
-import { getDayKey, isValidPlay } from './game-state.js';
+import { getDayKey, isValidEventSelection, isValidPlay } from './game-state.js';
 
 /**
  * cranked-play.js — submit daily play (up to 5 cards).
@@ -18,6 +18,22 @@ export async function handler(event, context) {
         error: {
           code: 'CRANKED_NOT_ENROLLED',
           message: 'Player is not enrolled. Call POST /cranked/enroll first.',
+        },
+        requestId: context.requestId,
+      },
+    };
+  }
+
+  const eventId = event.body?.eventId ?? null;
+  const eventValidation = isValidEventSelection(dayKey, eventId);
+  if (!eventValidation.ok) {
+    return {
+      statusCode: 400,
+      body: {
+        ok: false,
+        error: {
+          code: 'CRANKED_INVALID_EVENT',
+          message: eventValidation.message,
         },
         requestId: context.requestId,
       },
@@ -60,6 +76,8 @@ export async function handler(event, context) {
     id: playId,
     dayKey,
     userId,
+    eventId,
+    event: eventValidation.event,
     cards: validation.cards,
     submittedAt: new Date().toISOString(),
   });

@@ -3,64 +3,110 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cranked — Phase 4 Basic Loop</title>
+    <meta name="theme-color" content="#0f172a" />
+    <title>Cranked</title>
     <link rel="stylesheet" href="/cranked/styles.css" />
   </head>
   <body>
-    <main class="container">
-      <h1>Cranked (Phase 4 Basic Loop)</h1>
-      <p>Enroll once, submit up to 5 cards each day, then view the processed daily ranking.</p>
-
-      <p><a href="/login/?redirect=/cranked/">Login and return to Cranked</a></p>
-
-      <section class="panel">
-        <label for="token">Access token</label>
-        <textarea id="token" rows="4" placeholder="Paste Bearer token here"></textarea>
-      </section>
-
-      <section class="panel row">
-        <button id="enroll-btn">Enroll</button>
-        <button id="me-btn">Refresh My State</button>
-        <button id="play-btn">Submit Today&apos;s Play</button>
-      </section>
-
-      <section class="panel">
-        <h2>My Status</h2>
-        <div class="status-grid">
-          <div class="status-item"><span class="label">Day</span><span id="status-day">-</span></div>
-          <div class="status-item"><span class="label">Enrollment</span><span id="status-enrolled">Not enrolled</span></div>
-          <div class="status-item"><span class="label">Today&apos;s Play</span><span id="status-play">Not submitted</span></div>
-          <div class="status-item"><span class="label">Today&apos;s Rank</span><span id="status-rank">-</span></div>
+    <div class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Cranked</p>
+          <h1>Daily Rider Loop</h1>
         </div>
-      </section>
+        <a id="header-login-link" class="login-link" href="/login/?redirect=/cranked/">Login</a>
+        <button id="header-logout-btn" class="login-link hidden" type="button">Logout</button>
+      </header>
 
-      <section class="panel">
-        <h2>Pick Your Cards (max 5)</h2>
-        <p>Select cards from your deck. The selected card ids are submitted as your daily play.</p>
-        <div id="deck-list" class="deck-list">
-          <p>Refresh your state to load your deck.</p>
-        </div>
-        <label for="cards">Selected card ids (advanced/manual)</label>
-        <input id="cards" type="text" value="" placeholder="auto-filled from selection" />
-      </section>
+      <main class="screen-stack">
+        <section class="screen active" data-screen="home">
+          <div class="panel compact">
+            <div class="row actions-row">
+              <button id="me-btn">Refresh</button>
+              <button id="enroll-btn">Enroll</button>
+            </div>
+          </div>
 
-      <section class="panel">
-        <h2>Admin: Run Daily Engine</h2>
-        <label for="run-day-key">Run day key (optional, YYYY-MM-DD)</label>
-        <input id="run-day-key" type="text" placeholder="leave blank for today" />
-        <button id="run-day-btn">Run Day (admin)</button>
-      </section>
+          <section class="panel">
+            <h2>Current Status</h2>
+            <div class="status-grid">
+              <div class="status-item"><span class="label">Day</span><span id="status-day">-</span></div>
+              <div class="status-item"><span class="label">Enrollment</span><span id="status-enrolled">Not enrolled</span></div>
+              <div class="status-item"><span class="label">Selected Event</span><span id="status-event">None</span></div>
+              <div class="status-item"><span class="label">Play</span><span id="status-play">Not submitted</span></div>
+              <div class="status-item"><span class="label">Rank</span><span id="status-rank">-</span></div>
+              <div class="status-item"><span class="label">Score</span><span id="status-score">-</span></div>
+            </div>
+          </section>
 
-      <section class="panel">
-        <h2>Today&apos;s Leaderboard</h2>
-        <div id="leaderboard">No run processed yet.</div>
-      </section>
+          <section class="panel">
+            <h2>Last Result</h2>
+            <div id="last-result" class="empty-state">No processed result yet.</div>
+          </section>
 
-      <section class="panel">
-        <h2>Last response</h2>
-        <pre id="output">(no requests yet)</pre>
+          <section class="panel">
+            <h2>Recent Results</h2>
+            <div id="recent-results" class="empty-state">No previous results.</div>
+          </section>
+
+          <section class="panel">
+            <h2>Today&apos;s Leaderboard</h2>
+            <div id="leaderboard">No run processed yet.</div>
+          </section>
+        </section>
+
+        <section class="screen" data-screen="deck">
+          <section class="panel">
+            <h2>Your Deck</h2>
+            <p>Select up to 5 cards to form today&apos;s hand.</p>
+            <div id="deck-list" class="deck-list">
+              <p>Refresh your state to load your deck.</p>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Selected Hand</h2>
+            <div id="selected-hand" class="empty-state">No cards selected yet.</div>
+            <label for="cards">Selected card ids</label>
+            <input id="cards" type="text" value="" placeholder="auto-filled from selection" />
+            <div class="row actions-row">
+              <button id="clear-hand-btn" class="secondary-btn">Clear Hand</button>
+              <button id="suggest-hand-btn" class="secondary-btn">Suggest Best Hand</button>
+              <button id="play-btn">Submit Today&apos;s Play</button>
+            </div>
+          </section>
+        </section>
+
+        <section class="screen" data-screen="event">
+          <section class="panel">
+            <h2>Today&apos;s Events</h2>
+            <p>Choose one event before submitting today&apos;s hand.</p>
+            <div id="events-list" class="event-list">
+              <p>Refresh your state to load available events.</p>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Selected Event</h2>
+            <div id="selected-event" class="empty-state">No event selected yet.</div>
+          </section>
+
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Primary">
+        <button class="nav-btn active" data-target-screen="home">Home</button>
+        <button class="nav-btn" data-target-screen="deck">Deck</button>
+        <button class="nav-btn" data-target-screen="event">Event</button>
+      </nav>
+
+      <section class="debug-panel panel compact">
+        <details>
+          <summary>Debug Response</summary>
+          <pre id="output">(no requests yet)</pre>
+        </details>
       </section>
-    </main>
+    </div>
 
     <script type="module" src="/cranked/app.js"></script>
   </body>
