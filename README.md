@@ -13,6 +13,11 @@ Quick links:
 - [Authentication and roles](documentation/authentication-and-roles.md)
 - [Data service](documentation/data-service.md)
 - [Static hosting](documentation/static-hosting.md)
+- [Deploying to Railway](documentation/deploy-railway.md)
+
+Environment template:
+
+- [.env.example](.env.example)
 
 ## Architecture and maintenance
 

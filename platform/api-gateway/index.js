@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
 import { v4 as uuidv4 } from 'uuid';
 import { createLogger } from '../shared/logger.js';
+import { resolveCorsOrigin } from '../shared/cors.js';
 import { verifyToken } from '../shared/verifyToken.js';
 import { PlatformError, errors } from '../shared/errors.js';
 import { invoke } from '../function-runtime/index.js';
@@ -104,7 +105,7 @@ export function buildGateway(config) {
 
   // CORS
   app.register(cors, {
-    origin: process.env.CORS_ORIGIN ?? '*',
+    origin: resolveCorsOrigin(),
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
 

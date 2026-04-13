@@ -218,3 +218,13 @@ export function startDataService(config) {
 export function createDataClient(params) {
   return createScopedClient(params);
 }
+
+export function stopDataService() {
+  if (_db) {
+    _db.close();
+    _db = null;
+  }
+
+  _tableMap = new Map();
+  log.info('data-service stopped');
+}

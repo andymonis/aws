@@ -8,6 +8,7 @@ This checklist covers a single-service deployment where api-gateway is public an
 - Build command: `npm install`
 - Start command: `npm run start`
 - Healthcheck path: `/health`
+- Runtime: Node.js 20+
 
 ## 2) Required environment variables
 
@@ -16,10 +17,17 @@ This checklist covers a single-service deployment where api-gateway is public an
 
 ## 3) Recommended environment variables
 
+- `NODE_ENV=production`
 - `IDENTITY_PORT=3001`
 - `CORS_ORIGIN=https://<your-railway-domain>`
 - `DEV_SEED=false`
 - `LOG_LEVEL=info`
+
+Production guardrails now fail startup when:
+
+- `CORS_ORIGIN` is missing
+- `CORS_ORIGIN=*`
+- `DEV_SEED=true`
 
 ## 4) Persistent storage (SQLite)
 
@@ -55,3 +63,11 @@ Before production rollout:
 - Keep `DEV_SEED` disabled.
 - Confirm `CORS_ORIGIN` is restricted.
 - Verify logs do not include plaintext secrets.
+
+## 8) Shutdown behavior
+
+The server handles `SIGINT` and `SIGTERM` and performs graceful shutdown:
+
+- closes api-gateway listener
+- closes identity-service listener
+- closes data-service SQLite connection

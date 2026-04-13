@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { createLogger } from '../shared/logger.js';
+import { resolveCorsOrigin } from '../shared/cors.js';
 import { verifyToken } from '../shared/verifyToken.js';
 import { PlatformError } from '../shared/errors.js';
 import {
@@ -71,7 +72,7 @@ export function buildIdentityServer() {
   const app = Fastify({ logger: false });
 
   app.register(cors, {
-    origin: process.env.CORS_ORIGIN ?? '*',
+    origin: resolveCorsOrigin(),
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
 
