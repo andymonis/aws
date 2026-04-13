@@ -47,6 +47,25 @@ function hasRequiredRole(tokenPayload, requiredRoles) {
   return requiredRoles.some((r) => roles.includes(r));
 }
 
+function buildForwardHeaders(incomingHeaders) {
+  const headers = {};
+
+  for (const [key, value] of Object.entries(incomingHeaders ?? {})) {
+    const lower = key.toLowerCase();
+    if (lower === 'host' || lower === 'content-length' || lower === 'connection') continue;
+    if (value === undefined) continue;
+    headers[key] = Array.isArray(value) ? value.join(', ') : value;
+  }
+
+  return headers;
+}
+
+function buildIdentityUrl(identityPort, request) {
+  const pathSuffix = request.params['*'] ? `/${request.params['*']}` : '';
+  const query = request.raw.url.includes('?') ? request.raw.url.slice(request.raw.url.indexOf('?')) : '';
+  return `http://127.0.0.1:${identityPort}${pathSuffix}${query}`;
+}
+
 function buildAppsMap(config) {
   const declaredApps = config.apps && typeof config.apps === 'object'
     ? { ...config.apps }
@@ -114,6 +133,72 @@ export function buildGateway(config) {
   app.addHook('onRequest', (request, _reply, done) => {
     request.requestId = uuidv4();
     done();
+  });
+
+  // Gateway health probe
+  app.get('/health', async (request, reply) => {
+    return reply.status(200).send({
+      ok: true,
+      data: {
+        service: 'api-gateway',
+        status: 'up',
+        timestamp: new Date().toISOString(),
+      },
+      requestId: request.requestId,
+    });
+  });
+
+  // Identity reverse proxy for browser clients (single public origin).
+  app.all('/identity/*', async (request, reply) => {
+    const requestId = request.requestId;
+    const childLog = log.child({ requestId, proxy: 'identity', method: request.method });
+    const identityPort = parseInt(process.env.IDENTITY_PORT ?? '3001', 10);
+
+    try {
+      const targetUrl = buildIdentityUrl(identityPort, request);
+      const headers = buildForwardHeaders(request.headers);
+      const method = request.method.toUpperCase();
+
+      let body;
+      if (method !== 'GET' && method !== 'HEAD' && request.body !== undefined && request.body !== null) {
+        body = typeof request.body === 'string' || Buffer.isBuffer(request.body)
+          ? request.body
+          : JSON.stringify(request.body);
+
+        if (!headers['content-type']) {
+          headers['content-type'] = 'application/json';
+        }
+      }
+
+      const upstream = await fetch(targetUrl, {
+        method,
+        headers,
+        body,
+      });
+
+      for (const [key, value] of upstream.headers.entries()) {
+        const lower = key.toLowerCase();
+        if (lower === 'content-length' || lower === 'connection' || lower === 'transfer-encoding') continue;
+        reply.header(key, value);
+      }
+
+      const contentType = upstream.headers.get('content-type') ?? '';
+      const rawText = await upstream.text();
+
+      reply.status(upstream.status);
+      if (contentType.includes('application/json')) {
+        try {
+          return reply.send(rawText ? JSON.parse(rawText) : {});
+        } catch {
+          return reply.send({ ok: false, error: { code: 'GW_BAD_UPSTREAM', message: 'Invalid JSON from identity' } });
+        }
+      }
+
+      return reply.send(rawText);
+    } catch (err) {
+      childLog.error({ err }, 'identity proxy failure');
+      return fail(reply, errors.internal('Identity service unavailable'), requestId);
+    }
   });
 
   // Register each declared route

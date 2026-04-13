@@ -13,6 +13,7 @@ Current sample apps include `example-app`, `auth`, `login`, and `cranked` (mobil
 - [Authentication and roles](authentication-and-roles.md)
 - [Data service](data-service.md)
 - [Static hosting](static-hosting.md)
+- [Deploying to Railway](deploy-railway.md)
 
 ## Platform shape (Phase 2)
 

@@ -77,7 +77,7 @@ async function login() {
 const params = new URLSearchParams(window.location.search);
 const redirectParam = params.get('redirect');
 
-identityBaseInput.value = `${window.location.protocol}//${window.location.hostname}:3001`;
+identityBaseInput.value = `${window.location.origin}/identity`;
 redirectUrlInput.value = redirectParam || '/';
 
 loginBtn.addEventListener('click', () => login().catch((err) => showResponse('login', 0, { error: err.message })));

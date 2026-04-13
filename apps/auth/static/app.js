@@ -143,5 +143,5 @@ loginBtn.addEventListener('click', () => login().catch((err) => showResponse('lo
 refreshBtn.addEventListener('click', () => refreshToken().catch((err) => showResponse('refresh', 0, { error: err.message })));
 meBtn.addEventListener('click', () => getMe().catch((err) => showResponse('users/me', 0, { error: err.message })));
 
-identityBaseInput.value = `${window.location.protocol}//${window.location.hostname}:3001`;
+identityBaseInput.value = `${window.location.origin}/identity`;
 showSession();

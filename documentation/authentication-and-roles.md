@@ -70,6 +70,8 @@ For protected gateway routes (`auth: true`), include:
 
 If missing/invalid, gateway returns `401` with `GW_UNAUTHORIZED`.
 
+For browser apps served by api-gateway static hosting, call identity endpoints through the gateway proxy path (`/identity/*`) instead of hardcoding `:3001`. Example: `POST /identity/auth/login`, `POST /identity/auth/verify`.
+
 ## 3) Roles and route protection
 
 In `platform.config.js`, use `roles` to restrict access:

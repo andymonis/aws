@@ -38,7 +38,7 @@ const state = {
 };
 
 function getIdentityBaseUrl() {
-  return `${window.location.protocol}//${window.location.hostname}:3001`;
+  return `${window.location.origin}/identity`;
 }
 
 function redirectToLogin() {
