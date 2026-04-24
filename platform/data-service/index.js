@@ -78,12 +78,24 @@ function createScopedClient({ user }) {
       assertPermission(user, 'data:read');
 
       const sqlTable = assertTable(logicalTable);
-      const limit = Number.isInteger(options.limit) ? options.limit : parseInt(options.limit ?? '50', 10);
-      const boundedLimit = Number.isNaN(limit) ? 50 : Math.min(Math.max(limit, 1), 200);
+      const hasLimit = options.limit !== undefined && options.limit !== null;
 
-      const rows = _db
-        .prepare(`SELECT * FROM ${sqlTable} WHERE account_id = ? ORDER BY updated_at DESC LIMIT ?`)
-        .all(user.accountId, boundedLimit);
+      const rows = hasLimit
+        ? _db
+          .prepare(`SELECT * FROM ${sqlTable} WHERE account_id = ? ORDER BY rowid ASC LIMIT ?`)
+          .all(
+            user.accountId,
+            Math.min(
+              Math.max(
+                Number.isInteger(options.limit) ? options.limit : parseInt(options.limit, 10),
+                1
+              ),
+              200
+            )
+          )
+        : _db
+          .prepare(`SELECT * FROM ${sqlTable} WHERE account_id = ? ORDER BY rowid ASC`)
+          .all(user.accountId);
 
       return rows.map(mapRow);
     },

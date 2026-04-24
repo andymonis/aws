@@ -27,6 +27,16 @@ export default {
       staticDir: path.resolve(__dirname, './apps/cranked/static'),
       staticPrefix: '/cranked/',
     },
+    bank: {
+      functionsDir: path.resolve(__dirname, './apps/bank/functions'),
+      staticDir: path.resolve(__dirname, './apps/bank/static'),
+      staticPrefix: '/bank/',
+    },
+    tee: {
+      functionsDir: path.resolve(__dirname, './apps/tee/functions'),
+      staticDir: path.resolve(__dirname, './apps/tee/static'),
+      staticPrefix: '/tee/',
+    },
   },
 
   // API_GATEWAY
@@ -104,6 +114,46 @@ export default {
       auth: true,
       roles: ['admin'],
     },
+    {
+      app: 'bank',
+      path: '/bank/open',
+      method: 'POST',
+      function: 'bank-open',
+      auth: true,
+      roles: ['admin', 'user'],
+    },
+    {
+      app: 'tee',
+      path: '/tasks',
+      method: 'GET',
+      function: 'list-tasks-handler',
+      auth: true,
+      roles: ['admin', 'user'],
+    },
+    {
+      app: 'tee',
+      path: '/tasks',
+      method: 'POST',
+      function: 'create-task-handler',
+      auth: true,
+      roles: ['admin', 'user'],
+    },
+    {
+      app: 'tee',
+      path: '/action',
+      method: 'POST',
+      function: 'action-handler',
+      auth: true,
+      roles: ['admin', 'user'],
+    },
+    {
+      app: 'tee',
+      path: '/next',
+      method: 'POST',
+      function: 'next-handler',
+      auth: true,
+      roles: ['admin', 'user'],
+    },
   ],
 
   // Phase 2: tables will be declared here
@@ -114,5 +164,8 @@ export default {
     { name: 'cranked_players' },
     { name: 'cranked_plays' },
     { name: 'cranked_runs' },
+    { name: 'bank_accounts' },
+    { name: 'tee_tasks' },
+    { name: 'tee_events' },
   ],
 };

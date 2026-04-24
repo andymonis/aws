@@ -23,7 +23,7 @@
           <div class="panel compact">
             <div class="row actions-row">
               <button id="me-btn">Refresh</button>
-              <button id="enroll-btn">Enroll</button>
+              <button id="enroll-btn">Join Current Season</button>
             </div>
           </div>
 
@@ -31,9 +31,9 @@
             <h2>Current Status</h2>
             <div class="status-grid">
               <div class="status-item"><span class="label">Day</span><span id="status-day">-</span></div>
-              <div class="status-item"><span class="label">Enrollment</span><span id="status-enrolled">Not enrolled</span></div>
-              <div class="status-item"><span class="label">Selected Event</span><span id="status-event">None</span></div>
-              <div class="status-item"><span class="label">Play</span><span id="status-play">Not submitted</span></div>
+              <div class="status-item"><span class="label">Season</span><span id="status-enrolled">Not joined</span></div>
+              <div class="status-item"><span class="label">Today&apos;s Event</span><span id="status-event">None</span></div>
+              <div class="status-item"><span class="label">Daily Entry</span><span id="status-play">Not submitted</span></div>
               <div class="status-item"><span class="label">Rank</span><span id="status-rank">-</span></div>
               <div class="status-item"><span class="label">Score</span><span id="status-score">-</span></div>
             </div>
@@ -58,7 +58,7 @@
         <section class="screen" data-screen="deck">
           <section class="panel">
             <h2>Your Deck</h2>
-            <p>Select up to 5 cards to form today&apos;s hand.</p>
+            <p>Select up to 5 cards to deploy into today&apos;s chosen event.</p>
             <div id="deck-list" class="deck-list">
               <p>Refresh your state to load your deck.</p>
             </div>
@@ -72,7 +72,7 @@
             <div class="row actions-row">
               <button id="clear-hand-btn" class="secondary-btn">Clear Hand</button>
               <button id="suggest-hand-btn" class="secondary-btn">Suggest Best Hand</button>
-              <button id="play-btn">Submit Today&apos;s Play</button>
+              <button id="play-btn">Enter Today&apos;s Event</button>
             </div>
           </section>
         </section>
@@ -80,14 +80,14 @@
         <section class="screen" data-screen="event">
           <section class="panel">
             <h2>Today&apos;s Events</h2>
-            <p>Choose one event before submitting today&apos;s hand.</p>
+            <p>Choose one event to enter today. Your hand is submitted separately from the Deck screen.</p>
             <div id="events-list" class="event-list">
               <p>Refresh your state to load available events.</p>
             </div>
           </section>
 
           <section class="panel">
-            <h2>Selected Event</h2>
+            <h2>Today's Event</h2>
             <div id="selected-event" class="empty-state">No event selected yet.</div>
           </section>
 

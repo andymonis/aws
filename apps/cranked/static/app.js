@@ -174,11 +174,12 @@ function getSelectedEvent() {
 function renderStatus() {
   const meData = state.me;
   const selectedEvent = getSelectedEvent() ?? meData?.home?.selectedEvent ?? null;
+  const season = meData?.season ?? null;
 
   statusDayEl.textContent = meData?.dayKey ?? '-';
-  statusEnrolledEl.textContent = meData?.player ? 'Enrolled' : 'Not enrolled';
+  statusEnrolledEl.textContent = season ? `${season.name} joined` : 'Not joined';
   statusEventEl.textContent = selectedEvent ? selectedEvent.name : 'None';
-  statusPlayEl.textContent = meData?.todayPlay ? 'Submitted' : 'Not submitted';
+  statusPlayEl.textContent = meData?.todayPlay ? 'Entered' : 'Not entered';
   statusRankEl.textContent = meData?.todayOutcome?.rank ? String(meData.todayOutcome.rank) : '-';
   statusScoreEl.textContent = meData?.todayOutcome?.score ? String(meData.todayOutcome.score) : '-';
 }
@@ -223,7 +224,7 @@ function suggestBestHand() {
 
 function renderDeck() {
   if (!state.deck.length) {
-    deckListEl.innerHTML = '<p class="empty-state">Enroll and refresh to see your deck.</p>';
+    deckListEl.innerHTML = '<p class="empty-state">Join the current season and refresh to see your deck.</p>';
     return;
   }
 
@@ -442,6 +443,7 @@ async function enroll() {
   const result = await callApi('/cranked/enroll', 'POST');
   if (result.status === 200 || result.status === 201) {
     await refreshMe();
+    setActiveScreen('home');
   }
 }
 

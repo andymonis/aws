@@ -101,6 +101,48 @@ export function getDayKey(date = new Date()) {
   return date.toISOString().slice(0, 10);
 }
 
+export function getCurrentSeason(date = new Date()) {
+  const year = date.getUTCFullYear();
+  return {
+    id: `season-${year}`,
+    name: `${year} Season`,
+    startsAt: `${year}-01-01T00:00:00.000Z`,
+    endsAt: `${year}-12-31T23:59:59.999Z`,
+    year,
+  };
+}
+
+export function getSeasonForDayKey(dayKey) {
+  if (typeof dayKey !== 'string' || dayKey.length < 4) {
+    return getCurrentSeason();
+  }
+
+  const year = Number.parseInt(dayKey.slice(0, 4), 10);
+  if (!Number.isInteger(year) || year < 1970 || year > 9999) {
+    return getCurrentSeason();
+  }
+
+  return getCurrentSeason(new Date(Date.UTC(year, 0, 1)));
+}
+
+export function applySeasonToPlayer(player, season = getCurrentSeason()) {
+  return {
+    ...player,
+    seasonId: player.seasonId ?? season.id,
+    seasonName: player.seasonName ?? season.name,
+    seasonStartsAt: player.seasonStartsAt ?? season.startsAt,
+    seasonEndsAt: player.seasonEndsAt ?? season.endsAt,
+    seasonStatus: player.seasonStatus ?? 'active',
+  };
+}
+
+export function isPlayerEnrolledForSeason(player, season = getCurrentSeason()) {
+  return (
+    player?.seasonId === season.id
+    && player?.seasonStatus === 'active'
+  );
+}
+
 export function getAvailableEvents(dayKey = getDayKey()) {
   return Object.entries(EVENT_TEMPLATES).map(([eventType, templates]) => {
     const template = templates[computeStableIndex(`${dayKey}:${eventType}`, templates.length)];

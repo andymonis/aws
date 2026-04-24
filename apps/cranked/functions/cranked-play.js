@@ -1,4 +1,11 @@
-import { getDayKey, isValidEventSelection, isValidPlay } from './game-state.js';
+import {
+  applySeasonToPlayer,
+  getCurrentSeason,
+  getDayKey,
+  isPlayerEnrolledForSeason,
+  isValidEventSelection,
+  isValidPlay,
+} from './game-state.js';
 
 /**
  * cranked-play.js — submit daily play (up to 5 cards).
@@ -8,16 +15,32 @@ import { getDayKey, isValidEventSelection, isValidPlay } from './game-state.js';
 export async function handler(event, context) {
   const userId = context.user.id;
   const dayKey = getDayKey();
+  const season = getCurrentSeason();
 
-  const player = context.db.get('cranked_players', userId);
-  if (!player) {
+  const storedPlayer = context.db.get('cranked_players', userId);
+  if (!storedPlayer) {
     return {
       statusCode: 404,
       body: {
         ok: false,
         error: {
           code: 'CRANKED_NOT_ENROLLED',
-          message: 'Player is not enrolled. Call POST /cranked/enroll first.',
+          message: 'Player is not enrolled for the current season. Call POST /cranked/enroll first.',
+        },
+        requestId: context.requestId,
+      },
+    };
+  }
+
+  const player = applySeasonToPlayer(storedPlayer, season);
+  if (!isPlayerEnrolledForSeason(player, season)) {
+    return {
+      statusCode: 404,
+      body: {
+        ok: false,
+        error: {
+          code: 'CRANKED_NOT_ENROLLED',
+          message: 'Player is not enrolled for the current season. Call POST /cranked/enroll first.',
         },
         requestId: context.requestId,
       },
@@ -75,6 +98,7 @@ export async function handler(event, context) {
   const play = context.db.put('cranked_plays', {
     id: playId,
     dayKey,
+    seasonId: season.id,
     userId,
     eventId,
     event: eventValidation.event,

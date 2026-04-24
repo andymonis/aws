@@ -1,4 +1,4 @@
-import { getDayKey } from './game-state.js';
+import { getDayKey, getSeasonForDayKey } from './game-state.js';
 
 function computeTieBreakerSeed(dayKey, userId) {
   const source = `${dayKey}:${userId}`;
@@ -113,9 +113,30 @@ function computeOutcome(play, player, dayKey) {
  */
 export async function handler(event, context) {
   const dayKey = event.body?.dayKey ?? getDayKey();
+  const season = getSeasonForDayKey(dayKey);
 
   const existingRun = context.db.get('cranked_runs', dayKey);
   if (existingRun) {
+    if (existingRun.seasonId !== season.id) {
+      const migratedRun = context.db.put('cranked_runs', {
+        ...existingRun,
+        id: dayKey,
+        seasonId: season.id,
+      });
+
+      return {
+        statusCode: 200,
+        body: {
+          ok: true,
+          data: {
+            run: migratedRun,
+            reused: true,
+          },
+          requestId: context.requestId,
+        },
+      };
+    }
+
     return {
       statusCode: 200,
       body: {
@@ -130,7 +151,10 @@ export async function handler(event, context) {
   }
 
   const allPlays = context.db.list('cranked_plays', { limit: 200 });
-  const dayPlays = allPlays.filter((p) => p.dayKey === dayKey);
+  const dayPlays = allPlays.filter((p) => (
+    p.dayKey === dayKey
+    && (p.seasonId == null || p.seasonId === season.id)
+  ));
   const players = context.db.list('cranked_players', { limit: 200 });
   const playersById = new Map(players.map((player) => [player.userId, player]));
 
@@ -160,6 +184,7 @@ export async function handler(event, context) {
   const run = context.db.put('cranked_runs', {
     id: dayKey,
     dayKey,
+    seasonId: season.id,
     processedAt: new Date().toISOString(),
     totalPlays: dayPlays.length,
     scoringVersion: 'phase4-player-loop-v1',

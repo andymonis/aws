@@ -39,6 +39,12 @@ Available methods:
 - `context.db.put(tableName, item)`
 - `context.db.delete(tableName, id)`
 
+`context.db.list()` behavior:
+
+- omit `limit` to return all rows for the current account
+- pass `limit` to cap the result size (max `200`)
+- rows are returned in stable insertion order
+
 ## 3) Account scoping and permissions
 
 All operations are automatically scoped to `context.user.accountId`.

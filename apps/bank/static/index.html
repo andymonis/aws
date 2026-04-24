@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bank App</title>
+    <link rel="stylesheet" href="/bank/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Bank Demo</h1>
+      <p>Minimal banking app demo. First feature: open an account with a starting balance of 0.</p>
+
+      <label for="token">Access token</label>
+      <input id="token" type="text" placeholder="Paste JWT token" />
+
+      <div class="actions">
+        <button id="save-token">Save token</button>
+        <button id="open-account">POST /bank/open</button>
+      </div>
+
+      <p>
+        Need a token?
+        <a href="/login/?redirect=%2Fbank%2F">Open shared login</a>
+      </p>
+
+      <h2>API response</h2>
+      <pre id="output">(save a token and click POST /bank/open)</pre>
+    </main>
+
+    <script type="module" src="/bank/app.js"></script>
+  </body>
+</html>

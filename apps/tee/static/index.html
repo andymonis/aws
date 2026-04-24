@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tee Demo</title>
+    <link rel="stylesheet" href="/tee/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Tee Demo</h1>
+      <p>Step 4 of the execution engine demo: create tasks, record actions, list active tasks, and select the next task.</p>
+
+      <label for="token">Access token</label>
+      <input id="token" type="text" placeholder="Paste JWT token" />
+
+      <label for="title">Task title</label>
+      <input id="title" type="text" placeholder="Write report" />
+
+      <label for="action-task-id">Action task id</label>
+      <input id="action-task-id" type="text" placeholder="task_123" />
+
+      <label for="action-type">Action</label>
+      <select id="action-type">
+        <option value="skip">skip</option>
+        <option value="complete">complete</option>
+        <option value="snooze">snooze</option>
+      </select>
+
+      <div class="actions">
+        <button id="save-token">Save token</button>
+        <button id="create-task">POST /tasks</button>
+        <button id="record-action">POST /action</button>
+        <button id="list-tasks">GET /tasks</button>
+        <button id="next-task">POST /next</button>
+      </div>
+
+      <p>
+        Need a token?
+        <a href="/login/?redirect=%2Ftee%2F">Open shared login</a>
+      </p>
+
+      <h2>API response</h2>
+      <pre id="output">(save token → create task → record action → list tasks → select next)</pre>
+    </main>
+
+    <script type="module" src="/tee/app.js"></script>
+  </body>
+</html>
